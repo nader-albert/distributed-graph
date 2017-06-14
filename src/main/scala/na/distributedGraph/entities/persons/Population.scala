@@ -5,7 +5,7 @@ import com.typesafe.config.Config
 import na.distributedGraph.entities.businesses.Employer
 import na.distributedGraph.models.persons.{Add, Remove}
 
-class PersonsGuardian(personsConfig: Config) extends Actor with ActorLogging {
+class Population(personsConfig: Config) extends Actor with ActorLogging {
 
     var persons: List[ActorRef] = List.empty[ActorRef]
 
@@ -46,7 +46,7 @@ class PersonsGuardian(personsConfig: Config) extends Actor with ActorLogging {
     }
 }
 
-object PersonsGuardian {
+object Population {
 
-    def props(personsConfig: Config) = Props(classOf[PersonsGuardian], personsConfig)
+    def props(personsConfig: Config) = Props(classOf[Population], personsConfig)
 }

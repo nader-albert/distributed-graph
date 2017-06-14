@@ -2,7 +2,6 @@ package na.distributedGraph.entities.query
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import com.typesafe.config.Config
-import na.distributedGraph.entities.persons.PersonsGuardian
 
 class ExplorersSquad(queryConfig: Config) extends Actor with ActorLogging {
 
@@ -34,5 +33,5 @@ class ExplorersSquad(queryConfig: Config) extends Actor with ActorLogging {
 
 object ExplorersSquad {
 
-    def props(queryConfig: Config) = Props(classOf[PersonsGuardian], queryConfig)
+    def props(queryConfig: Config) = Props(classOf[ExplorersSquad], queryConfig)
 }

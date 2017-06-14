@@ -4,7 +4,7 @@ import akka.actor.{ActorSystem, Props}
 import com.typesafe.config.ConfigFactory
 import na.distributedGraph.models.corporates.Add
 import na.distributedGraph.entities.businesses.{BusinessGuardian, Employer}
-import na.distributedGraph.entities.persons.{Person, PersonsGuardian}
+import na.distributedGraph.entities.persons.{Person, Population}
 import scala.language.postfixOps
 
 
@@ -26,7 +26,7 @@ object GraphBuilder extends App {
     val businesses = system.actorOf(BusinessGuardian.props(businessesConfig), name = "businesses-guardian")
     println("\r\n ************************** root corporates node initialised ************************** \r\n" )
 
-    val persons = system.actorOf(PersonsGuardian.props(personsConfig), name = "persons-guardian")
+    val persons = system.actorOf(Population.props(personsConfig), name = "persons-guardian")
     println("\r\n ************************** Root Persons Node Initialised ************************** \r\n" )
 
 
