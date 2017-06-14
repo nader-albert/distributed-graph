@@ -21,7 +21,7 @@ object GraphBuilder extends App {
     val businessesConfig = applicationConfig getConfig "business_config"
     val personsConfig = applicationConfig getConfig "person_config"
 
-    println("******************** Initializing graph data structure **************************")
+    println("\r\n ******************** Initializing graph data structure ************************** \r\n ")
 
     val businesses = system.actorOf(BusinessGuardian.props(businessesConfig), name = "businesses-guardian")
     println("\r\n ************************** root corporates node initialised ************************** \r\n" )
@@ -30,17 +30,17 @@ object GraphBuilder extends App {
     println("\r\n ************************** Root Persons Node Initialised ************************** \r\n" )
 
 
-    println("\r\n ************************** adding 20 different corporates ************************** \r\n")
-    (1 to 20).foreach { index =>
+    //println("\r\n ************************** adding 20 different corporates ************************** \r\n")
+    /*(1 to 20).foreach { index =>
         val business = system.actorOf(Employer.props(index), "corporate-" + index)
         businesses ! Add(business)
-    }
+    }*/
 
-    println("\r\n ************************** adding 20 different persons ************************** \r\n")
+    //println("\r\n ************************** adding 20 different persons ************************** \r\n")
 
-    (1 to 20).foreach { index =>
+    /*(1 to 20).foreach { index =>
         val person = system.actorOf(Person.props(index), "person-" + index)
         persons ! Add(person)
-    }
+    }*/
 
 }

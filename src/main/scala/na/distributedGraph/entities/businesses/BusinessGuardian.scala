@@ -4,8 +4,6 @@ import akka.actor.{Actor, ActorLogging, ActorRef, Kill, Props}
 import com.typesafe.config.Config
 import na.distributedGraph.models.corporates._
 
-import scala.concurrent.Await
-
 class BusinessGuardian(graphConfig: Config) extends Actor with ActorLogging {
 
     var businesses: List[ActorRef] = List.empty[ActorRef]
@@ -44,9 +42,17 @@ class BusinessGuardian(graphConfig: Config) extends Actor with ActorLogging {
                 case _:Throwable => 0
             }
 
-        for (corporate <- 1 until corporatesInMarket) {
-            businesses = context.actorOf(Employer.props(corporate), name = "rover_" + corporate) :: businesses
-        }
+        log.info ("\r\n ************************** Establishing (%s) different corporates ************************** \r\n".format(corporatesInMarket))
+
+        for (corporateId <- 1 until corporatesInMarket) establish(corporateId)
+    }
+
+    private def establish(corporatesIndex: Int) = {
+        val newBusiness = context.actorOf(Employer.props(corporatesIndex), name = "Corporate-" + corporatesIndex)
+
+        newBusiness ! Join
+
+        businesses = newBusiness :: businesses
     }
 }
 

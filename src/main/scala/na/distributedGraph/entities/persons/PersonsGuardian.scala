@@ -2,13 +2,14 @@ package na.distributedGraph.entities.persons
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Kill, Props}
 import com.typesafe.config.Config
+import na.distributedGraph.entities.businesses.Employer
 import na.distributedGraph.models.persons.{Add, Remove}
 
 class PersonsGuardian(personsConfig: Config) extends Actor with ActorLogging {
 
     var persons: List[ActorRef] = List.empty[ActorRef]
 
-    //initializePersons()
+    initializePersons()
 
     override def receive: Receive = {
 
@@ -22,8 +23,8 @@ class PersonsGuardian(personsConfig: Config) extends Actor with ActorLogging {
             persons = persons.filterNot(_ == sender)
     }
 
-    /*private def initializePersons() = {
-        val personsInTheMarket: Int =
+    private def initializePersons() = {
+        val personsInThePopulation: Int =
             try {
                 Integer.parseInt(personsConfig getString "number")
             } catch {
@@ -33,10 +34,16 @@ class PersonsGuardian(personsConfig: Config) extends Actor with ActorLogging {
                 case _:Throwable => 0
             }
 
-        for (corporate <- 1 until personsInTheMarket) {
-            persons = context.actorOf(Employer.props(corporate), name = "rover_" + corporate) :: persons
-        }
-    }*/
+        log.info ("\r\n ************************** People Guardian adding (%s) different persons ************************** \r\n".format(personsInThePopulation))
+
+        for (personIndex <- 1 until personsInThePopulation) add(personIndex)
+    }
+
+    private def add(personIndex: Int) = {
+        val newPerson = context.actorOf(Employer.props(personIndex), name = "Person-" + personIndex)
+
+        persons = newPerson :: persons
+    }
 }
 
 object PersonsGuardian {
