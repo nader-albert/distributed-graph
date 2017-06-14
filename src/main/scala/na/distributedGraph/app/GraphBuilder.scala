@@ -1,14 +1,12 @@
 package na.distributedGraph.app
 
-import akka.actor.{ActorSystem, Props}
+import akka.actor.ActorSystem
 import com.typesafe.config.ConfigFactory
-import na.distributedGraph.models.corporates.Add
-import na.distributedGraph.entities.businesses.{BusinessGuardian, Employer}
-import na.distributedGraph.entities.persons.{Person, Population}
+import na.distributedGraph.entities.businesses.Market
+import na.distributedGraph.entities.persons.Population
+import na.distributedGraph.entities.query.ExplorersSquad
+
 import scala.language.postfixOps
-
-
-import scala.util.Random
 
 object GraphBuilder extends App {
 
@@ -18,17 +16,20 @@ object GraphBuilder extends App {
 
     val applicationConfig = config getConfig "graph"
 
-    val businessesConfig = applicationConfig getConfig "business_config"
-    val personsConfig = applicationConfig getConfig "person_config"
+    val marketConfig = applicationConfig getConfig "business_config"
+    val populationConfig = applicationConfig getConfig "population_config"
+    val queryConfig = applicationConfig getConfig "query_config"
 
     println("\r\n ******************** Initializing graph data structure ************************** \r\n ")
 
-    val businesses = system.actorOf(BusinessGuardian.props(businessesConfig), name = "businesses-guardian")
-    println("\r\n ************************** root corporates node initialised ************************** \r\n" )
+    val market = system.actorOf(Market.props(marketConfig), name = "market")
+    println("\r\n ************************** Root Corporate node initialised ************************** \r\n" )
 
-    val persons = system.actorOf(Population.props(personsConfig), name = "persons-guardian")
-    println("\r\n ************************** Root Persons Node Initialised ************************** \r\n" )
+    val population = system.actorOf(Population.props(populationConfig), name = "population")
+    println("\r\n ************************** Root Population Node Initialised ************************** \r\n" )
 
+    val explorers = system.actorOf(ExplorersSquad.props(queryConfig), name = "insight")
+    println("\r\n ************************** Root Query Node Initialised ************************** \r\n" )
 
     //println("\r\n ************************** adding 20 different corporates ************************** \r\n")
     /*(1 to 20).foreach { index =>

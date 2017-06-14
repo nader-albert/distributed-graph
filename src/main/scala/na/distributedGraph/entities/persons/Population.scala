@@ -2,14 +2,15 @@ package na.distributedGraph.entities.persons
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Kill, Props}
 import com.typesafe.config.Config
+import na.distributedGraph.entities.Squad
 import na.distributedGraph.entities.businesses.Employer
 import na.distributedGraph.models.persons.{Add, Remove}
 
-class Population(personsConfig: Config) extends Actor with ActorLogging {
+class Population(populationConfig: Config) extends Squad[Person] with Actor with ActorLogging {
 
     var persons: List[ActorRef] = List.empty[ActorRef]
 
-    initializePersons()
+    initialise(populationConfig)
 
     override def receive: Receive = {
 
@@ -23,23 +24,8 @@ class Population(personsConfig: Config) extends Actor with ActorLogging {
             persons = persons.filterNot(_ == sender)
     }
 
-    private def initializePersons() = {
-        val personsInThePopulation: Int =
-            try {
-                Integer.parseInt(personsConfig getString "number")
-            } catch {
-                case ne: NumberFormatException =>
-                    log error "configuration problem: invalid squad number "
-                    0
-                case _:Throwable => 0
-            }
-
-        log.info ("\r\n ************************** People Guardian adding (%s) different persons ************************** \r\n".format(personsInThePopulation))
-
-        for (personIndex <- 1 until personsInThePopulation) add(personIndex)
-    }
-
-    private def add(personIndex: Int) = {
+    @Override
+    def build(personIndex: Int): Unit = {
         val newPerson = context.actorOf(Employer.props(personIndex), name = "Person-" + personIndex)
 
         persons = newPerson :: persons
@@ -48,5 +34,5 @@ class Population(personsConfig: Config) extends Actor with ActorLogging {
 
 object Population {
 
-    def props(personsConfig: Config) = Props(classOf[Population], personsConfig)
+    def props(populationConfig: Config) = Props(classOf[Population], populationConfig)
 }

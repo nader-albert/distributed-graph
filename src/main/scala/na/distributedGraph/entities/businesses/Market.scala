@@ -2,13 +2,14 @@ package na.distributedGraph.entities.businesses
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Kill, Props}
 import com.typesafe.config.Config
+import na.distributedGraph.entities.Squad
 import na.distributedGraph.models.corporates._
 
-class BusinessGuardian(graphConfig: Config) extends Actor with ActorLogging {
+class Market(marketConfig: Config) extends Squad[Employer] with Actor with ActorLogging {
 
     var businesses: List[ActorRef] = List.empty[ActorRef]
 
-    initializeBusinesses()
+    initialise(marketConfig)
 
     override def receive: Receive = {
         case Add(business) =>
@@ -28,26 +29,10 @@ class BusinessGuardian(graphConfig: Config) extends Actor with ActorLogging {
             businesses = businesses.filterNot(_ == sender)
 
         case ListAll => sender ! Corporates(businesses)
-            //val loader = Await.result(context.actorSelection(self.path/"*")
      }
 
-    private def initializeBusinesses() = {
-        val corporatesInMarket: Int =
-            try {
-                Integer.parseInt(graphConfig getString "number")
-            } catch {
-                case ne: NumberFormatException =>
-                    log error "configuration problem: invalid number "
-                    0
-                case _:Throwable => 0
-            }
-
-        log.info ("\r\n ************************** Establishing (%s) different corporates ************************** \r\n".format(corporatesInMarket))
-
-        for (corporateId <- 1 until corporatesInMarket) establish(corporateId)
-    }
-
-    private def establish(corporatesIndex: Int) = {
+    @Override
+    def build(corporatesIndex: Int): Unit = {
         val newBusiness = context.actorOf(Employer.props(corporatesIndex), name = "Corporate-" + corporatesIndex)
 
         newBusiness ! Join
@@ -56,7 +41,7 @@ class BusinessGuardian(graphConfig: Config) extends Actor with ActorLogging {
     }
 }
 
-object BusinessGuardian {
+object Market {
 
-    def props(graphConfig: Config) = Props(classOf[BusinessGuardian], graphConfig)
+    def props(graphConfig: Config) = Props(classOf[Market], graphConfig)
 }
