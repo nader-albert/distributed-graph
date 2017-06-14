@@ -20,6 +20,7 @@ trait Squad [T] {
 
         log.info ("\r\n ************************** Adding (%s) member to the squad ************************** \r\n".format(squadSize))
 
+        for(index <- 0 to squadSize) build(index)
     }
 
     def build(count: Int)

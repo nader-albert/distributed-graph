@@ -31,8 +31,7 @@ class Market(marketConfig: Config) extends Squad[Employer] with Actor with Actor
         case ListAll => sender ! Corporates(businesses)
      }
 
-    @Override
-    def build(corporatesIndex: Int): Unit = {
+    override def build(corporatesIndex: Int): Unit = {
         val newBusiness = context.actorOf(Employer.props(corporatesIndex), name = "Corporate-" + corporatesIndex)
 
         newBusiness ! Join

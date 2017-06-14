@@ -26,7 +26,7 @@ class Explorer(market: ActorRef) extends Actor with ActorLogging {
         case Corporates(businesses) =>
             queryInExecution match {
                 case Some(query) => print(businesses, query)
-                case None => log.error("false state") //TODO throw exception and escalate to supervisor
+                case None => log.error("false state, a results message has been received without a corresponding query") //TODO throw exception and escalate to supervisor
             }
 
             queryInExecution = None
@@ -34,11 +34,12 @@ class Explorer(market: ActorRef) extends Actor with ActorLogging {
     }
 
     private def print(records: Iterable[ActorRef], query: Query): Unit = {
-        log.info("\n\r results for query: (%s) \n\r".format(query))
+        log.info("\n\r results for query: (%s) \n\r [ ************************ ".format(query))
 
         records.foreach { record =>
-            log.info("\n\r ############################ (%s) ################################ \n\r".format(record.path.name))
+            println("\t\t(%s)".format(record.path.name))
         }
+        println(" ************************ ]")
 
     }
 }
