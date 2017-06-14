@@ -1,15 +1,13 @@
 package na.distributedGraph.entities.businesses
 
+import akka.util.Timeout
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import na.distributedGraph.models._
-import akka.pattern.ask
-import akka.util.Timeout
 import na.distributedGraph.models.corporates._
 
-import scala.concurrent.Await
 import scala.concurrent.duration._
 import scala.language.postfixOps
-import scala.util.Random.{nextDouble, nextString}
+import scala.util.Random.{nextInt, nextString}
 
 class Employer(id: Integer) extends Actor with ActorLogging {
 
@@ -28,21 +26,33 @@ class Employer(id: Integer) extends Actor with ActorLogging {
 
             val offer = Offer(preparePackage)
 
+            log.info("(%s) hiring (%s) with offer salary (%s)".format(self.path.name, person.path.name, offer.`package`.salary))
+
             implicit val timeout = Timeout(waitTime)
 
-            Await.result (person ? offer , waitTime) match {
+            person ! offer
+
+            //TODO: hiring process should be made asynchronous
+            /*Await.result (person ? offer , waitTime) match {
                 case Accepted => employees.::(sender)
 
-                case Rejected =>
-                    log.info("candidate (%s) has rejected the offer(%s)".format(sender, offer))
-            }
+                case Rejected(submitedOffer, reason) =>
+                    log.info("candidate (%s) has rejected the offer(%s) due to (%s)".format(submitedOffer, offer, reason))
+            }*/
 
         case Fire(person) => person ! Fired
             employees = employees.filterNot(_ == person)
 
+        case Accepted(submittedOffer) =>
+            log.info("candidate (%s) has accepted the offer(%s)".format(sender.path.name, submittedOffer))
+
+            employees.::(sender)
+
+        case Rejected(submittedOffer, reason) =>
+            log.info("candidate (%s) has rejected the offer(%s) due to (%s)".format(sender.path.name, submittedOffer, reason))
     }
 
-    private def preparePackage: Package = Package(nextString(20), nextDouble)
+    private def preparePackage: Package = Package(nextString(20), nextInt(20))
 }
 
 object Employer {

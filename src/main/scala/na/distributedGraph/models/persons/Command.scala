@@ -4,11 +4,15 @@ import akka.actor.ActorRef
 
 trait Command
 
-case class Friend(friend: ActorRef) extends Command
+case class RequestFriendship(friend: ActorRef) extends Command
+
+case class ReceiveFriendshipRequest(friend: ActorRef) extends Command
 
 case class UnFriend(friend: ActorRef) extends Command
 
-case class RelateWith(relative: ActorRef) extends Command
+case class RequestRelationship(relative: ActorRef) extends Command
+
+case class ReceiveRelationshipRequest(relative: ActorRef) extends Command
 
 case class UnRelateWith(relative: ActorRef) extends Command
 

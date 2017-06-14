@@ -3,7 +3,6 @@ package na.distributedGraph.entities.persons
 import akka.actor.{Actor, ActorLogging, ActorRef, Kill, Props}
 import com.typesafe.config.Config
 import na.distributedGraph.entities.Squad
-import na.distributedGraph.entities.businesses.Employer
 import na.distributedGraph.models.{ListAll, SearchResult}
 import na.distributedGraph.models.persons.{Add, Remove}
 
@@ -16,21 +15,20 @@ class Population(populationConfig: Config) extends Squad[Person] with Actor with
     override def receive: Receive = {
 
         case Add(person) =>
-            log.info("inviting person (%s - %s) to join the market ".format(person, person.path.name))
+            log.info("adding new person (%s - %s) to the population".format(person, person.path.name))
             persons.::(person)
 
         case Remove(person) =>
-            log.info("removing person (%s - %s) to join the market ".format(person, person.path.name))
+            log.info("person (%s - %s) left the population ".format(person, person.path.name))
             person ! Kill
             persons = persons.filterNot(_ == sender)
 
         case ListAll => sender ! SearchResult(persons)
-
     }
 
     @Override
     def build(personIndex: Int): Unit = {
-        val newPerson = context.actorOf(Employer.props(personIndex), name = "Person-" + personIndex)
+        val newPerson = context.actorOf(Person.props(personIndex), name = "Person-" + personIndex)
 
         persons = newPerson :: persons
     }

@@ -10,7 +10,7 @@ case object Left extends Event
 
 case class Accepted(offer: Offer) extends Event
 
-case class Rejected(reason: String) extends Event
+case class Rejected(offer: Offer, reason: String) extends Event
 
 case object Fired extends Event
 

@@ -1,18 +1,30 @@
 package na.distributedGraph.app
 
-import akka.actor.ActorSystem
+import akka.actor.{ActorRef, ActorSystem}
 import com.typesafe.config.ConfigFactory
 import na.distributedGraph.entities.businesses.Market
 import na.distributedGraph.entities.persons.Population
 import na.distributedGraph.entities.query.ExplorersSquad
-import na.distributedGraph.models.Query
+import na.distributedGraph.models.{ListAll, Query, SearchResult}
 import na.distributedGraph.models.queries.Explore
+import akka.pattern.ask
+import akka.util.Timeout
+import na.distributedGraph.models.corporates.Hire
+import na.distributedGraph.models.persons.{ReceiveFriendshipRequest, RequestRelationship}
 
+import scala.concurrent.duration._
+import scala.concurrent.Await
+import scala.concurrent.duration.FiniteDuration
 import scala.language.postfixOps
+import scala.util.Random
 
 object GraphBuilder extends App {
 
-    val system = ActorSystem("DistributedGraph")
+    val system = ActorSystem("graph")
+
+    val waitTime: FiniteDuration = 5 seconds
+
+    val sleepTime: FiniteDuration = 30 seconds
 
     val config = ConfigFactory load
 
@@ -33,19 +45,111 @@ object GraphBuilder extends App {
     val explorers = system.actorOf(ExplorersSquad.props(queryConfig), name = "insight")
     println("\r\n ************************** Root Query Node Initialised ************************** \r\n" )
 
+    implicit val timeout = Timeout(waitTime)
+
+    val people = bringSquadOf(population)
+    val corporates = bringSquadOf(market)
+
+    println("number of people is (%s) and number of corporates is (%s)".format(people.size, corporates.size))
+
+    hire(people, corporates)
+
+    connectFriends(people)
+
+    connectRelatives(people)
+
+    Thread.sleep(sleepTime.toMillis)
+
+    println("Executing queries")
+
     explorers ! Explore(Query("TEST Query"))
 
-    //println("\r\n ************************** adding 20 different corporates ************************** \r\n")
-    /*(1 to 20).foreach { index =>
-        val business = system.actorOf(Employer.props(index), "corporate-" + index)
-        businesses ! Add(business)
-    }*/
+    Thread.sleep(sleepTime.toMillis)
 
-    //println("\r\n ************************** adding 20 different persons ************************** \r\n")
+    println("End program")
 
-    /*(1 to 20).foreach { index =>
-        val person = system.actorOf(Person.props(index), "person-" + index)
-        persons ! Add(person)
-    }*/
+    private def bringSquadOf(squad: ActorRef) = {
+        Await.result(squad ? ListAll, waitTime) match {
+            case SearchResult(actors) => actors
+        }
+    }
 
+    private def hire(people: Iterable[ActorRef], corporates: Iterable[ActorRef]) = {
+        few(corporates).foreach {
+            corporate =>
+                corporate ! Hire(oneOf(people))
+                corporate ! Hire(oneOf(people))
+                corporate ! Hire(oneOf(people))
+        }
+
+        few(corporates).foreach {
+            corporate =>
+                corporate ! Hire(oneOf(people))
+                corporate ! Hire(oneOf(people))
+                corporate ! Hire(oneOf(people))
+                corporate ! Hire(oneOf(people))
+        }
+
+        few(corporates).foreach {
+            corporate =>
+                corporate ! Hire(oneOf(people))
+                corporate ! Hire(oneOf(people))
+        }
+    }
+
+    private def connectFriends(people: Iterable[ActorRef]) = {
+        few(people).foreach {
+            person =>
+                person ! ReceiveFriendshipRequest(oneOf(people, Some(person)))
+                person ! ReceiveFriendshipRequest(oneOf(people, Some(person)))
+                person ! ReceiveFriendshipRequest(oneOf(people, Some(person)))
+        }
+
+        few(people).foreach {
+            person =>
+                person ! ReceiveFriendshipRequest(oneOf(people, Some(person)))
+                person ! ReceiveFriendshipRequest(oneOf(people, Some(person)))
+                person ! ReceiveFriendshipRequest(oneOf(people, Some(person)))
+                person ! ReceiveFriendshipRequest(oneOf(people, Some(person)))
+        }
+
+        few(people).foreach {
+            person =>
+                person ! ReceiveFriendshipRequest(oneOf(people, Some(person)))
+                person ! ReceiveFriendshipRequest(oneOf(people, Some(person)))
+        }
+    }
+
+    private def connectRelatives(people: Iterable[ActorRef]) = {
+        few(people).foreach {
+            person =>
+                person ! RequestRelationship(oneOf(people, Some(person)))
+                person ! RequestRelationship(oneOf(people, Some(person)))
+                person ! RequestRelationship(oneOf(people, Some(person)))
+        }
+
+        few(people).foreach {
+            person =>
+                person ! RequestRelationship(oneOf(people, Some(person)))
+                person ! RequestRelationship(oneOf(people, Some(person)))
+                person ! RequestRelationship(oneOf(people, Some(person)))
+                person ! RequestRelationship(oneOf(people, Some(person)))
+        }
+
+        few(people).foreach {
+            person =>
+                person ! RequestRelationship(oneOf(people, Some(person)))
+                person ! RequestRelationship(oneOf(people, Some(person)))
+        }
+    }
+
+    private def few(actors: Iterable[ActorRef]) = Random.shuffle(actors).take(Random.nextInt(actors.size -1))
+
+    private def oneOf(actors: Iterable[ActorRef], exceptMe: Option[ActorRef] = None) = {
+        Random.shuffle(exceptMe.fold(actors)(me => actors.filterNot(_ == me))).head
+    }
+
+    private def generateQueries() = {
+
+    }
 }
