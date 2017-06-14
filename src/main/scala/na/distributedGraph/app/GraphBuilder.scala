@@ -5,6 +5,8 @@ import com.typesafe.config.ConfigFactory
 import na.distributedGraph.entities.businesses.Market
 import na.distributedGraph.entities.persons.Population
 import na.distributedGraph.entities.query.ExplorersSquad
+import na.distributedGraph.models.Query
+import na.distributedGraph.models.queries.Explore
 
 import scala.language.postfixOps
 
@@ -30,6 +32,8 @@ object GraphBuilder extends App {
 
     val explorers = system.actorOf(ExplorersSquad.props(queryConfig), name = "insight")
     println("\r\n ************************** Root Query Node Initialised ************************** \r\n" )
+
+    explorers ! Explore(Query("TEST Query"))
 
     //println("\r\n ************************** adding 20 different corporates ************************** \r\n")
     /*(1 to 20).foreach { index =>

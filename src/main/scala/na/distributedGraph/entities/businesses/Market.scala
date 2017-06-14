@@ -3,6 +3,7 @@ package na.distributedGraph.entities.businesses
 import akka.actor.{Actor, ActorLogging, ActorRef, Kill, Props}
 import com.typesafe.config.Config
 import na.distributedGraph.entities.Squad
+import na.distributedGraph.models.{Join, Leave, ListAll, SearchResult}
 import na.distributedGraph.models.corporates._
 
 class Market(marketConfig: Config) extends Squad[Employer] with Actor with ActorLogging {
@@ -28,7 +29,7 @@ class Market(marketConfig: Config) extends Squad[Employer] with Actor with Actor
             log.info("business (%s) has left the market ".format(sender.path.name))
             businesses = businesses.filterNot(_ == sender)
 
-        case ListAll => sender ! Corporates(businesses)
+        case ListAll => sender ! SearchResult(businesses)
      }
 
     override def build(corporatesIndex: Int): Unit = {

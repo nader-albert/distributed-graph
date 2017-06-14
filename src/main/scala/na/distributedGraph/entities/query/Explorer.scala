@@ -1,8 +1,8 @@
 package na.distributedGraph.entities.query
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
-import na.distributedGraph.models.corporates.{Corporates, ListAll}
-import na.distributedGraph.models.queries.{Explore, Query}
+import na.distributedGraph.models.{ListAll, Query, SearchResult}
+import na.distributedGraph.models.queries.Explore
 
 class Explorer(market: ActorRef) extends Actor with ActorLogging {
 
@@ -23,9 +23,9 @@ class Explorer(market: ActorRef) extends Actor with ActorLogging {
     }
 
     private def executing: Receive = {
-        case Corporates(businesses) =>
+        case SearchResult(corporates) =>
             queryInExecution match {
-                case Some(query) => print(businesses, query)
+                case Some(query) => print(corporates, query)
                 case None => log.error("false state, a results message has been received without a corresponding query") //TODO throw exception and escalate to supervisor
             }
 

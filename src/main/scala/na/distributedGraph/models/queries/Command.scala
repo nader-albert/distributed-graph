@@ -1,6 +1,7 @@
 package na.distributedGraph.models.queries
 
 import akka.actor.ActorRef
+import na.distributedGraph.models.Query
 
 trait Command
 

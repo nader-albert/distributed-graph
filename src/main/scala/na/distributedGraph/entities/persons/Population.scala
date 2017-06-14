@@ -4,6 +4,7 @@ import akka.actor.{Actor, ActorLogging, ActorRef, Kill, Props}
 import com.typesafe.config.Config
 import na.distributedGraph.entities.Squad
 import na.distributedGraph.entities.businesses.Employer
+import na.distributedGraph.models.{ListAll, SearchResult}
 import na.distributedGraph.models.persons.{Add, Remove}
 
 class Population(populationConfig: Config) extends Squad[Person] with Actor with ActorLogging {
@@ -22,6 +23,9 @@ class Population(populationConfig: Config) extends Squad[Person] with Actor with
             log.info("removing person (%s - %s) to join the market ".format(person, person.path.name))
             person ! Kill
             persons = persons.filterNot(_ == sender)
+
+        case ListAll => sender ! SearchResult(persons)
+
     }
 
     @Override

@@ -17,6 +17,7 @@ class ExplorersSquad(queryConfig: Config) extends Squad[Explorer] with Actor wit
     var explorers: List[ActorRef] = List.empty[ActorRef]
 
     val market: ActorRef = Await.result(context.actorSelection("../market").resolveOne(waitTime), waitTime)
+    val population: ActorRef = Await.result(context.actorSelection("../population").resolveOne(waitTime), waitTime)
 
     initialise(queryConfig)
 
