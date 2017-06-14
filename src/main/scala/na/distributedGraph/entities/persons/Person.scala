@@ -2,9 +2,9 @@ package na.distributedGraph.entities.persons
 import akka.pattern.ask
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import akka.util.Timeout
-import na.distributedGraph.commands.Offer
-import na.distributedGraph.commands.persons.{Friend, RelateWith, UnFriend, UnRelateWith}
-import na.distributedGraph.events.{Accepted, Fired, FriendRequestAccepted}
+import na.distributedGraph.models.Offer
+import na.distributedGraph.models.corporates.{Accepted, Fired}
+import na.distributedGraph.models.persons._
 
 import scala.concurrent.Await
 import scala.concurrent.duration._

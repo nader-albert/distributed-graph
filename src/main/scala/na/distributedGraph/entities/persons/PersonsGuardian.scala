@@ -2,7 +2,7 @@ package na.distributedGraph.entities.persons
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Kill, Props}
 import com.typesafe.config.Config
-import na.distributedGraph.commands.persons.{Add, Remove}
+import na.distributedGraph.models.persons.{Add, Remove}
 
 class PersonsGuardian(personsConfig: Config) extends Actor with ActorLogging {
 

@@ -2,7 +2,7 @@ package na.distributedGraph.app
 
 import akka.actor.{ActorSystem, Props}
 import com.typesafe.config.ConfigFactory
-import na.distributedGraph.commands.corporates.Add
+import na.distributedGraph.models.corporates.Add
 import na.distributedGraph.entities.businesses.{BusinessGuardian, Employer}
 import na.distributedGraph.entities.persons.{Person, PersonsGuardian}
 import scala.language.postfixOps

@@ -1,11 +1,10 @@
 package na.distributedGraph.entities.businesses
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
-import na.distributedGraph.commands._
+import na.distributedGraph.models._
 import akka.pattern.ask
 import akka.util.Timeout
-import na.distributedGraph.commands.corporates.{Fire, Hire, Join}
-import na.distributedGraph.events.{Accepted, Fired, Joined, Rejected}
+import na.distributedGraph.models.corporates._
 
 import scala.concurrent.Await
 import scala.concurrent.duration._

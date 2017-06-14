@@ -2,14 +2,15 @@ package na.distributedGraph.entities.businesses
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Kill, Props}
 import com.typesafe.config.Config
-import na.distributedGraph.commands.corporates.{Add, Join, Leave, Remove}
-import na.distributedGraph.events.{Joined, Left}
+import na.distributedGraph.models.corporates._
+
+import scala.concurrent.Await
 
 class BusinessGuardian(graphConfig: Config) extends Actor with ActorLogging {
 
     var businesses: List[ActorRef] = List.empty[ActorRef]
 
-    //initializeBusinesses()
+    initializeBusinesses()
 
     override def receive: Receive = {
         case Add(business) =>
@@ -27,9 +28,12 @@ class BusinessGuardian(graphConfig: Config) extends Actor with ActorLogging {
             sender ! Kill
             log.info("business (%s) has left the market ".format(sender.path.name))
             businesses = businesses.filterNot(_ == sender)
+
+        case ListAll => sender ! Corporates(businesses)
+            //val loader = Await.result(context.actorSelection(self.path/"*")
      }
 
-    /*private def initializeBusinesses() = {
+    private def initializeBusinesses() = {
         val corporatesInMarket: Int =
             try {
                 Integer.parseInt(graphConfig getString "number")
@@ -43,7 +47,7 @@ class BusinessGuardian(graphConfig: Config) extends Actor with ActorLogging {
         for (corporate <- 1 until corporatesInMarket) {
             businesses = context.actorOf(Employer.props(corporate), name = "rover_" + corporate) :: businesses
         }
-    }*/
+    }
 }
 
 object BusinessGuardian {
