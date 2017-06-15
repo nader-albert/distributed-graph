@@ -4,7 +4,7 @@ import akka.actor.ActorRef
 
 trait Message
 
-case class SearchResult(actorList: Iterable[ActorRef])
+case class SearchResult(actorList: Seq[ActorRef])
 
 case class Query private(search: String) {
 

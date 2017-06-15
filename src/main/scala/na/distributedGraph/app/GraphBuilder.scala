@@ -6,7 +6,7 @@ import na.distributedGraph.entities.businesses.Market
 import na.distributedGraph.entities.persons.Population
 import na.distributedGraph.entities.query.ExplorersSquad
 import na.distributedGraph.models.{ListAll, Query, SearchResult}
-import na.distributedGraph.models.queries.Explore
+import na.distributedGraph.models.queries.{Explore, Run}
 import akka.pattern.ask
 import akka.util.Timeout
 import na.distributedGraph.models.corporates.Hire
@@ -54,15 +54,17 @@ object GraphBuilder extends App {
 
     hire(people, corporates)
 
-    connectFriends(people)
+    //connectFriends(people)
 
-    connectRelatives(people)
+    //connectRelatives(people)
 
     Thread.sleep(sleepTime.toMillis)
 
     println("Executing queries")
 
-    explorers ! Explore(Query("TEST Query"))
+    val queries = generateQueries
+
+    explorers ! Run(queries)
 
     Thread.sleep(sleepTime.toMillis)
 
@@ -74,30 +76,45 @@ object GraphBuilder extends App {
         }
     }
 
-    private def hire(people: Iterable[ActorRef], corporates: Iterable[ActorRef]) = {
-        few(corporates).foreach {
-            corporate =>
-                corporate ! Hire(oneOf(people))
-                corporate ! Hire(oneOf(people))
-                corporate ! Hire(oneOf(people))
+    private def hire(people: Seq[ActorRef], corporates: Seq[ActorRef]) = {
+        //val personsGroup1 = people //few(people)(3)
+        //var corporatesGroup = corporates
+
+        people.foreach { person =>
+            val randomCorporate = Random.shuffle(corporates).head
+            //corporatesGroup = corporatesGroup.filterNot(_==randomCorporate)
+            randomCorporate ! Hire(person)
         }
 
-        few(corporates).foreach {
+        /*few(corporates)().foreach {
             corporate =>
-                corporate ! Hire(oneOf(people))
-                corporate ! Hire(oneOf(people))
-                corporate ! Hire(oneOf(people))
-                corporate ! Hire(oneOf(people))
-        }
+                corporate ! Hire(group1.head)
+                corporate ! Hire(group1.tail.head)
+                corporate ! Hire(group1.last)
+        }*/
 
-        few(corporates).foreach {
+        /*val group2 = few(people, group1)(4)
+
+        few(corporates)().foreach {
             corporate =>
-                corporate ! Hire(oneOf(people))
-                corporate ! Hire(oneOf(people))
+                corporate ! Hire(group2.head)
+                corporate ! Hire(group2.drop(1).head)
+                corporate ! Hire(group2.drop(2).head)
+                corporate ! Hire(group2.last)
+        }*/
+
+        /*
+         val group3 = few(people, group1 ++ group2)(2)
+
+        few(corporates)().foreach {
+            corporate =>
+                corporate ! Hire(group3.head)
+                corporate ! Hire(group3.last)
         }
+        */
     }
 
-    private def connectFriends(people: Iterable[ActorRef]) = {
+    /*private def connectFriends(people: Iterable[ActorRef]) = {
         few(people).foreach {
             person =>
                 person ! ReceiveFriendshipRequest(oneOf(people, Some(person)))
@@ -141,15 +158,17 @@ object GraphBuilder extends App {
                 person ! RequestRelationship(oneOf(people, Some(person)))
                 person ! RequestRelationship(oneOf(people, Some(person)))
         }
+    }*/
+
+    private def few(actors: Seq[ActorRef], exclusionList: Seq[ActorRef] = Seq.empty)(count: Int = Random.nextInt(actors.size -1)) = {
+        Random.shuffle(actors.filterNot(exclusionList.contains).take(count))
     }
 
-    private def few(actors: Iterable[ActorRef]) = Random.shuffle(actors).take(Random.nextInt(actors.size -1))
-
-    private def oneOf(actors: Iterable[ActorRef], exceptMe: Option[ActorRef] = None) = {
-        Random.shuffle(exceptMe.fold(actors)(me => actors.filterNot(_ == me))).head
+    private def oneOf(actors: Seq[ActorRef], exclusionList: Seq[ActorRef] = Seq.empty) = {
+        Random.shuffle(actors.filterNot(exclusionList.contains)).head
     }
 
-    private def generateQueries() = {
-
+    private def generateQueries(): Seq[Query] = {
+        Seq.empty
     }
 }

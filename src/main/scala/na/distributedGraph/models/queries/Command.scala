@@ -9,4 +9,6 @@ case class Add(explorer: ActorRef) extends Command
 
 case class Remove(explorer: ActorRef) extends Command
 
+case class Run(queries: Seq[Query]) extends Command
+
 case class Explore(query: Query) extends Command

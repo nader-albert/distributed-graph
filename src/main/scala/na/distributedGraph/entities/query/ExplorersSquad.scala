@@ -4,7 +4,7 @@ import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import com.typesafe.config.Config
 import na.distributedGraph.entities.Squad
 import na.distributedGraph.entities.query.ExplorersSquad.waitTime
-import na.distributedGraph.models.queries.{Add, Explore, Remove}
+import na.distributedGraph.models.queries.{Add, Explore, Remove, Run}
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
@@ -32,7 +32,8 @@ class ExplorersSquad(queryConfig: Config) extends Squad[Explorer] with Actor wit
 
         //TODO: A trivial routing algorithm implementation... should try to send to a free explorer in the squad, for better resource utilisation
         // several queries might end up be sitting in the mailbox of few explorers while others might be with idle hands
-        case explore: Explore => explorers.drop(Random.nextInt(explorers.size)).head forward explore
+        // distribute the list evenly on the list of available explorers
+        case Run(queries) => explorers.drop(Random.nextInt(explorers.size)).head forward Explore(explore)
     }
 
     override def build(explorerIndex: Int): Unit = {

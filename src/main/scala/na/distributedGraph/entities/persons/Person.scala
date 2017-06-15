@@ -1,6 +1,6 @@
 package na.distributedGraph.entities.persons
 import akka.pattern.ask
-import akka.actor.{Actor, ActorLogging, ActorRef, Props}
+import akka.actor.{Actor, ActorLogging, ActorPath, ActorRef, Props}
 import akka.util.Timeout
 import na.distributedGraph.models.Offer
 import na.distributedGraph.models.corporates.{Accepted, Fired, Rejected}
@@ -18,6 +18,8 @@ class Person(id: Integer) extends Actor with ActorLogging {
 
     var employed = false
 
+    var worksAt: Option[ActorPath] = None
+
     import Person._
 
     override def receive: Receive = {
@@ -34,6 +36,7 @@ class Person(id: Integer) extends Actor with ActorLogging {
                 log.info("accepted an offer from (%s) with package (%s)".format(sender.path.name, offer.`package`.salary))
 
                 employed = true
+                worksAt = Some(sender.path)
                 sender ! Accepted(offer)
             }
 
