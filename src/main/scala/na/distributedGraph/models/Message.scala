@@ -9,9 +9,9 @@ case class SearchResult(actorList: Seq[ActorRef])
 
 trait Entity
 
-case class Corporate() extends Entity
+case class Corporate(name: String) extends Entity
 case class Employee() extends Entity
-case class Person() extends Entity
+case class Person(name: String) extends Entity
 
 trait Relation
 
@@ -27,11 +27,11 @@ trait QueryBuilder {
 
     def find(entityToBuilder: => QueryBuilder): this.type = entityToBuilder
 
-    def every(entity: Entity): this.type = {
-        this.entity = entity
+    /*def every(entity: Person.type): this.type = {
+        //this.entity = entity
         many = true
         this
-    }
+    }*/
 
     def one(entity: Entity): this.type = {
         this.entity = entity
@@ -42,35 +42,45 @@ trait QueryBuilder {
     def `with`() = ???
 
     def build: Command = ???
+
+    def transform: Command
 }
 
 class CorporateQueryBuilder extends QueryBuilder {
     var numberOfEmployees = 0
 
     def withEmployeesMoreThan(number: Int) = this.numberOfEmployees = number
-
-    find(every(Person())).build
 }
 
-class PersonQueryBuilder extends QueryBuilder {
+trait PersonQueryBuilder extends QueryBuilder {
     var friendOf: Seq[Person] = Seq.empty
     var relativeOf: Seq[Person] = Seq.empty
     var worksAt: Option[Corporate] = None
     var isEmployed: Boolean = worksAt.isDefined
+
+    def every(entity: Person.type): this.type = {
+        //this.entity = entity
+        many = true
+        this
+    }
 
     def withRelatives(persons: => Seq[Person]): this.type = {
         this.relativeOf = persons
         this
     }
 
-    def hasFriends(persons: => Seq[Person]): this.type = {
-        this.friendOf = persons
+    def hasFriends(persons: => Boolean): this.type = {
+        //this.friendOf = persons
         this
     }
 
-    def employedAt(employer: Corporate): this.type = {
+    def worksAt(employer: Corporate): this.type = {
         this.worksAt = Some(employer)
         this
+    }
+
+    def that(queryBuilder: PersonQueryBuilder): this.type = {
+        queryBuilder
     }
 
     def employed: this.type = {
@@ -78,7 +88,22 @@ class PersonQueryBuilder extends QueryBuilder {
         this
     }
 
-    find(every(Person())).build
+    def every(entity: Person): this.type = {
+        this.entity = entity
+        many = true
+        this
+    }
+
+    //def relativesOf
+
+    def build(queryBuilder: QueryBuilder) = queryBuilder.transform
+
+    def transform: Command = {
+        //TODO: match case on all attributes and determine the command
+
+        ListAll
+    }
+
 }
 
 /*trait CorporateSupport {

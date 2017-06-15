@@ -120,12 +120,17 @@ object GraphBuilder extends App {
     }
 
     private def generateQueries(): Seq[Command] = {
-        Seq.empty
 
-        new CorporateQueryBuilder().find(every(Person)).build //with PersonSupport
+        new PersonQueryBuilder {
+            override def build {
+                find(every(Person) that worksAt(Corporate("Corporate-2")))
+            }
+        }
 
-        //PersonQuery.find {
-        //    find all relatives of (person)
-        //}
+        new PersonQueryBuilder {
+            override def build {
+                find(one(Person("Person-3")) that worksAt(Corporate("Corporate-2")))
+            }
+        }
     }
 }
