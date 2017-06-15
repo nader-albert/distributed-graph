@@ -5,7 +5,7 @@ import com.typesafe.config.ConfigFactory
 import na.distributedGraph.entities.businesses.Market
 import na.distributedGraph.entities.persons.Population
 import na.distributedGraph.entities.query.ExplorersSquad
-import na.distributedGraph.models.{ListAll, Query, SearchResult}
+import na.distributedGraph.models.{QueryBuilder, _}
 import na.distributedGraph.models.queries.{Explore, Run}
 import akka.pattern.ask
 import akka.util.Timeout
@@ -77,12 +77,8 @@ object GraphBuilder extends App {
     }
 
     private def hire(people: Seq[ActorRef], corporates: Seq[ActorRef]) = {
-        //val personsGroup1 = people //few(people)(3)
-        //var corporatesGroup = corporates
-
         people.foreach { person =>
             val randomCorporate = Random.shuffle(corporates).head
-            //corporatesGroup = corporatesGroup.filterNot(_==randomCorporate)
             randomCorporate ! Hire(person)
         }
     }
@@ -92,7 +88,7 @@ object GraphBuilder extends App {
             person =>
                 var exclude = Seq.empty.+:(person)
 
-                (1 to Random.nextInt(10)).foreach { step => // a person can have a maximum of 10 relatives
+                (1 to Random.nextInt(10)).foreach { step => // a person can have a maximum of 10 friends
                     val otherPerson = oneOf(people, exclude)
                     exclude = exclude.+:(otherPerson)
 
@@ -102,7 +98,7 @@ object GraphBuilder extends App {
     }
 
     private def connectRelatives(people: Seq[ActorRef]) = {
-        few(people)(5).foreach {
+        few(people)(10).foreach {
             person =>
                 var exclude = Seq.empty.+:(person)
 
@@ -123,7 +119,13 @@ object GraphBuilder extends App {
         Random.shuffle(actors.filterNot(exclusionList.contains)).head
     }
 
-    private def generateQueries(): Seq[Query] = {
+    private def generateQueries(): Seq[Command] = {
         Seq.empty
+
+        new CorporateQueryBuilder().find(every(Person)).build //with PersonSupport
+
+        //PersonQuery.find {
+        //    find all relatives of (person)
+        //}
     }
 }
