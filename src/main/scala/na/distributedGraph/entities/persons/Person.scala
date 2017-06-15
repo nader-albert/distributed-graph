@@ -41,15 +41,14 @@ class Person(id: Integer) extends Actor with ActorLogging {
             }
 
         case Fired => employed = false
-
     }
 
     private def requestRelationship: Receive = {
-        case RequestRelationship(otherPerson) =>
+        case RequestRelationshipWith(otherPerson) =>
             log.info("(%s) requesting family relation with (%s)".format(self.path.name, otherPerson.path.name))
 
             implicit val timeout = Timeout(waitTime)
-            Await.result (otherPerson ? ReceiveRelationshipRequest(self), waitTime) match {
+            Await.result (otherPerson ? ReceiveRelationshipRequestFrom(self), waitTime) match {
                 case FamilyRelationAccepted =>
                     log.info("(%s) became relative with (%s)".format(self.path.name, otherPerson.path.name))
                     relatives.+:(otherPerson)
@@ -62,12 +61,12 @@ class Person(id: Integer) extends Actor with ActorLogging {
     }
 
     private def requestFriendship: Receive = {
-        case RequestFriendship(otherPerson) =>
+        case RequestFriendshipWith(otherPerson) =>
             log.info("(%s) requesting friendship with (%s)".format(self.path.name, otherPerson.path.name))
 
             implicit val timeout = Timeout(waitTime)
 
-            Await.result (otherPerson ? ReceiveFriendshipRequest(self), waitTime) match {
+            Await.result (otherPerson ? ReceiveFriendshipRequestFrom(self), waitTime) match {
                 case FriendRequestAccepted =>
                     log.info("(%s) became friend with (%s)".format(self.path.name, otherPerson.path.name))
 
@@ -81,7 +80,7 @@ class Person(id: Integer) extends Actor with ActorLogging {
     }
 
     private def receiveRelationship: Receive = {
-        case ReceiveRelationshipRequest(otherPerson) =>
+        case ReceiveRelationshipRequestFrom(otherPerson) =>
             log.info("(%s) became relative with (%s)".format(self.path.name, otherPerson.path.name))
             relatives = relatives.+:(otherPerson)
             //relatives = relatives + otherPerson
@@ -89,7 +88,7 @@ class Person(id: Integer) extends Actor with ActorLogging {
     }
 
     private def receiveFriendship: Receive = {
-        case ReceiveFriendshipRequest(otherPerson) =>
+        case ReceiveFriendshipRequestFrom(otherPerson) =>
             log.info("(%s) became friend with (%s)".format(self.path.name, otherPerson.path.name))
             friends = friends.+:(otherPerson)
             //friends = friends + otherPerson
@@ -99,7 +98,7 @@ class Person(id: Integer) extends Actor with ActorLogging {
 
 object Person {
 
-    val waitTime: FiniteDuration = 10 seconds //Adding in sets which maintains uniquness requires quite a bit of extra time
+    val waitTime: FiniteDuration = 25 seconds //Adding in sets which maintains uniquness requires quite a bit of extra time
     def props(id: Integer) = Props(classOf[Person], id)
 }
 

@@ -10,7 +10,7 @@ import na.distributedGraph.models.queries.{Explore, Run}
 import akka.pattern.ask
 import akka.util.Timeout
 import na.distributedGraph.models.corporates.Hire
-import na.distributedGraph.models.persons.{ReceiveFriendshipRequest, RequestRelationship}
+import na.distributedGraph.models.persons.{ReceiveFriendshipRequestFrom, RequestFriendshipWith, RequestRelationshipWith}
 
 import scala.concurrent.duration._
 import scala.concurrent.Await
@@ -54,9 +54,9 @@ object GraphBuilder extends App {
 
     hire(people, corporates)
 
-    //connectFriends(people)
+    connectFriends(people)
 
-    //connectRelatives(people)
+    connectRelatives(people)
 
     Thread.sleep(sleepTime.toMillis)
 
@@ -85,80 +85,35 @@ object GraphBuilder extends App {
             //corporatesGroup = corporatesGroup.filterNot(_==randomCorporate)
             randomCorporate ! Hire(person)
         }
-
-        /*few(corporates)().foreach {
-            corporate =>
-                corporate ! Hire(group1.head)
-                corporate ! Hire(group1.tail.head)
-                corporate ! Hire(group1.last)
-        }*/
-
-        /*val group2 = few(people, group1)(4)
-
-        few(corporates)().foreach {
-            corporate =>
-                corporate ! Hire(group2.head)
-                corporate ! Hire(group2.drop(1).head)
-                corporate ! Hire(group2.drop(2).head)
-                corporate ! Hire(group2.last)
-        }*/
-
-        /*
-         val group3 = few(people, group1 ++ group2)(2)
-
-        few(corporates)().foreach {
-            corporate =>
-                corporate ! Hire(group3.head)
-                corporate ! Hire(group3.last)
-        }
-        */
     }
 
-    /*private def connectFriends(people: Iterable[ActorRef]) = {
-        few(people).foreach {
+    private def connectFriends(people: Seq[ActorRef]) = {
+        few(people)(5).foreach {
             person =>
-                person ! ReceiveFriendshipRequest(oneOf(people, Some(person)))
-                person ! ReceiveFriendshipRequest(oneOf(people, Some(person)))
-                person ! ReceiveFriendshipRequest(oneOf(people, Some(person)))
-        }
+                var exclude = Seq.empty.+:(person)
 
-        few(people).foreach {
-            person =>
-                person ! ReceiveFriendshipRequest(oneOf(people, Some(person)))
-                person ! ReceiveFriendshipRequest(oneOf(people, Some(person)))
-                person ! ReceiveFriendshipRequest(oneOf(people, Some(person)))
-                person ! ReceiveFriendshipRequest(oneOf(people, Some(person)))
-        }
+                (1 to Random.nextInt(10)).foreach { step => // a person can have a maximum of 10 relatives
+                    val otherPerson = oneOf(people, exclude)
+                    exclude = exclude.+:(otherPerson)
 
-        few(people).foreach {
-            person =>
-                person ! ReceiveFriendshipRequest(oneOf(people, Some(person)))
-                person ! ReceiveFriendshipRequest(oneOf(people, Some(person)))
+                    person ! RequestFriendshipWith(otherPerson)
+                }
         }
     }
 
-    private def connectRelatives(people: Iterable[ActorRef]) = {
-        few(people).foreach {
+    private def connectRelatives(people: Seq[ActorRef]) = {
+        few(people)(5).foreach {
             person =>
-                person ! RequestRelationship(oneOf(people, Some(person)))
-                person ! RequestRelationship(oneOf(people, Some(person)))
-                person ! RequestRelationship(oneOf(people, Some(person)))
-        }
+                var exclude = Seq.empty.+:(person)
 
-        few(people).foreach {
-            person =>
-                person ! RequestRelationship(oneOf(people, Some(person)))
-                person ! RequestRelationship(oneOf(people, Some(person)))
-                person ! RequestRelationship(oneOf(people, Some(person)))
-                person ! RequestRelationship(oneOf(people, Some(person)))
-        }
+                (1 to Random.nextInt(10)).foreach { step => // a person can have a maximum of 10 relatives
+                    val otherPerson = oneOf(people, exclude)
+                    exclude = exclude.+:(otherPerson)
 
-        few(people).foreach {
-            person =>
-                person ! RequestRelationship(oneOf(people, Some(person)))
-                person ! RequestRelationship(oneOf(people, Some(person)))
+                    person ! RequestRelationshipWith(otherPerson)
+                }
         }
-    }*/
+    }
 
     private def few(actors: Seq[ActorRef], exclusionList: Seq[ActorRef] = Seq.empty)(count: Int = Random.nextInt(actors.size -1)) = {
         Random.shuffle(actors.filterNot(exclusionList.contains).take(count))
