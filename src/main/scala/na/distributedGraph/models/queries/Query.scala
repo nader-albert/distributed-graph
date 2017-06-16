@@ -1,26 +1,41 @@
-package na.distributedGraph.models
+package na.distributedGraph.models.queries
 
 import akka.actor.ActorRef
-import na.distributedGraph
-import na.distributedGraph.entities.businesses.Employer
-import na.distributedGraph.models
 
-trait Message
+sealed trait Query
 
-case class SearchResult(actorList: Seq[ActorRef])
+trait PersonQuery extends Query {
+    //val entity: Entity
 
-trait Entity
+    //sealed trait condition
+}
 
-case class Corporate(name: String) extends Entity
-case class Employee() extends Entity
+trait CorporateQuery extends Query
+
+case class RelativesOf(person: Person)
+case class EmployeesOf(corporate: Corporate)
+case class RelativesOf(persons: EmployeesOf) extends PersonQuery
+case class HasFriendsWithRelatives(employed: Boolean) extends PersonQuery
+case class CorporatesWithEmployees(number: Int) extends CorporateQuery
+
+case class SequenceOf(actorList: Seq[ActorRef])
+case class MapOf(actorList: Map[ActorRef, Seq[ActorRef]])
+
+case class SearchResult(conditionSatisfied: Boolean)
+
+/** */
+sealed trait Entity
+
+case object Person extends Entity
+case object Corporate extends Entity
+
 case class Person(name: String) extends Entity
+case class Corporate(name: String) extends Entity
 
 trait Relation
 
 case class Relative() extends Relation
 case class Friend() extends Relation
-
-case class Query ()
 
 /*trait QueryBuilder {
     var one = false
@@ -57,8 +72,13 @@ case class Query ()
 trait PersonQueryBuilder { //extends QueryBuilder {
     //var friendOf: Seq[Person] = Seq.empty
     //var relativeOf: Seq[Person] = Seq.empty
-    //var worksAt: Option[Corporate] = None
-    //var isEmployed: Boolean = worksAt.isDefined
+    var worksAt: Option[Corporate] = None
+    var isEmployed: Boolean = worksAt.isDefined
+    var withFriendsEmployed = false
+    var withRelativesEmployed = false
+
+    var select: Entity = _
+    var conditions: List[ConditionWord] = List.empty
 
     def every(person: Person.type) = new Every(person)
 
@@ -83,51 +103,44 @@ trait PersonQueryBuilder { //extends QueryBuilder {
     sealed trait MatchWord {
         var one = false
         var many = false
-        var `match`: Any
+        var `match`: Entity
     }
 
     sealed trait LinkWord {}
     sealed trait ConditionWord {}
 
     class Every(override var `match`: Person.type) extends MatchWord {
-        //many = true
+        select = `match`
     }
 
     class One(override var `match`: Entity) extends MatchWord {
-        //one = true
+        select = `match`
     }
 
     class RelativesOf(override var `match`: MatchWord) extends MatchWord {
 
     }
 
-    class Who(condition: ConditionWord) extends LinkWord {
+    class Who(condition: ConditionWord) extends LinkWord {}
 
-    }
+    class With(condition: ConditionWord) extends LinkWord {}
 
-    class With(condition: ConditionWord) extends LinkWord {
-
+    class WorksAt(employer: Corporate) extends ConditionWord {
+        worksAt = Some(employer)
+        conditions = conditions.::(this)
     }
 
     class HasFriends(condition: ConditionWord) extends ConditionWord {
-
+        conditions = conditions.::(this)
     }
-
-
-    class WorksAt(employer: Corporate) extends ConditionWord {
-
-    }
-
-    /*class WithRelatives(employer: Corporate) extends ConditionWord {
-
-    }*/
 
     class WithRelatives(condition: ConditionWord) extends ConditionWord {
-
+        conditions = conditions.::(this)
     }
 
     class Employed extends ConditionWord {
-
+        isEmployed = true
+        conditions = conditions.::(this)
     }
 
     /*protected def one(entity: Entity): this.type = {
@@ -163,46 +176,13 @@ trait PersonQueryBuilder { //extends QueryBuilder {
 
     //def relativesOf
 
-    def build = this.transform
+    def build: Command = this.transform
 
-    def transform: Command = {
-        //TODO: match case on all attributes and determine the command
+    private def transform: Command = {
+        //Seq.empty
 
-        ListAll
+
+        Explore()
     }
 
 }
-
-/*trait CorporateSupport {
-
-    def employees
-
-    def of(corporate: Employer)
-
-    override def toString: String = {
-        "QUERY"
-    }
-}*/
-
-/*trait PersonSupport {
-
-    val relatives: Option[String]
-    val friends: Option[String]
-
-    def isEmployed
-
-    def worksAt(corporate: Employer)
-
-    def of(person: Person)
-
-    override def toString: String = {
-        "QUERY"
-    }
-}*/
-
-/*object PersonQuery {
-
-    def apply: Query = new Query("")
-
-    def build(): Command
-}*/

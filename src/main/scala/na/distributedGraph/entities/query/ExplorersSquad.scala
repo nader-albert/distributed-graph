@@ -33,7 +33,9 @@ class ExplorersSquad(queryConfig: Config) extends Squad[Explorer] with Actor wit
         //TODO: A trivial routing algorithm implementation... should try to send to a free explorer in the squad, for better resource utilisation
         // several queries might end up be sitting in the mailbox of few explorers while others might be with idle hands
         // distribute the list evenly on the list of available explorers
-       // case Run(queries) => explorers.drop(Random.nextInt(explorers.size)).head forward Explore(explore)
+        case Run(queries) => queries foreach { query =>
+            explorers.drop(Random.nextInt(explorers.size)).head forward Explore(query)
+        }
     }
 
     override def build(explorerIndex: Int): Unit = {

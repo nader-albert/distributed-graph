@@ -3,8 +3,9 @@ package na.distributedGraph.entities.businesses
 import akka.actor.{Actor, ActorLogging, ActorRef, Kill, Props}
 import com.typesafe.config.Config
 import na.distributedGraph.entities.Squad
-import na.distributedGraph.models.{Join, Leave, ListAll, SearchResult}
+import na.distributedGraph.models.{Join, Leave, ListAll}
 import na.distributedGraph.models.corporates._
+import na.distributedGraph.models.queries.SearchResult
 
 class Market(marketConfig: Config) extends Squad[Employer] with Actor with ActorLogging {
 

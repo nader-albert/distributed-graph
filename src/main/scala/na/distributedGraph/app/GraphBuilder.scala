@@ -6,11 +6,11 @@ import na.distributedGraph.entities.businesses.Market
 import na.distributedGraph.entities.persons.Population
 import na.distributedGraph.entities.query.ExplorersSquad
 import na.distributedGraph.models.{QueryBuilder, _}
-import na.distributedGraph.models.queries.{Explore, Run}
+import na.distributedGraph.models.queries.{Command => _, _}
 import akka.pattern.ask
 import akka.util.Timeout
 import na.distributedGraph.models.corporates.Hire
-import na.distributedGraph.models.persons.{ReceiveFriendshipRequestFrom, RequestFriendshipWith, RequestRelationshipWith}
+import na.distributedGraph.models.persons.{RequestFriendshipWith, RequestRelationshipWith}
 
 import scala.concurrent.duration._
 import scala.concurrent.Await
@@ -64,7 +64,7 @@ object GraphBuilder extends App {
 
     val queries = generateQueries
 
-    explorers ! Run(queries)
+    //explorers ! Run(queries)
 
     Thread.sleep(sleepTime.toMillis)
 
@@ -72,7 +72,7 @@ object GraphBuilder extends App {
 
     private def bringSquadOf(squad: ActorRef) = {
         Await.result(squad ? ListAll, waitTime) match {
-            case SearchResult(actors) => actors
+            case SequenceOf(actors) => actors
         }
     }
 
@@ -142,10 +142,10 @@ object GraphBuilder extends App {
             find(one(Person("Person-3"))) who worksAt(Corporate("Corporate-2"))
         } build
 
-        new PersonQueryBuilder {
-            find(relativesOf(every(Person)))
+        /*new PersonQueryBuilder {
+            find(relativesOf(every(Person(""))))
         } build
-
+*/
         new PersonQueryBuilder {
             find(relativesOf(every(Person))) who worksAt (Corporate("Corporate-3"))
         } build

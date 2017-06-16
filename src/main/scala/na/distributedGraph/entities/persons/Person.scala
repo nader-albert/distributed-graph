@@ -5,6 +5,7 @@ import akka.util.Timeout
 import na.distributedGraph.models.Offer
 import na.distributedGraph.models.corporates.{Accepted, Fired, Rejected}
 import na.distributedGraph.models.persons._
+import na.distributedGraph.models.queries.{SearchResult, SequenceOf}
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
@@ -23,7 +24,41 @@ class Person(id: Integer) extends Actor with ActorLogging {
     import Person._
 
     override def receive: Receive = {
-        employmentRequest orElse requestRelationship orElse requestFriendship orElse receiveRelationship orElse receiveFriendship
+        query orElse employmentRequest orElse requestRelationship orElse requestFriendship orElse receiveRelationship orElse receiveFriendship
+    }
+
+    private def query: Receive = {
+
+        case FindRelatives => sender ! SequenceOf(relatives)
+
+        case FindFriends => sender ! SequenceOf(friends)
+
+        case FindFriendsWithRelatives(isEmployed) =>
+            implicit val timeout = Timeout(waitTime)
+
+            var matchingFriends = Seq.empty[ActorRef]
+
+            friends.foreach { friend =>
+                Await.result (friend ? FindRelatives(isEmployed), waitTime) match {
+                    case SequenceOf(friendRelatives) => if (friendRelatives.nonEmpty) matchingFriends = matchingFriends.+:(friend)
+                }
+            }
+            sender ! SequenceOf(matchingFriends)
+
+        case FindRelatives(isEmployed) =>
+            var relativeList = Seq.empty[ActorRef]
+
+            relatives.foreach { relative =>
+                Await.result (relative ? Employed, waitTime) match {
+                    case SearchResult(employmentStatus) if employmentStatus == isEmployed => relativeList = relativeList.+:(relative)
+                }
+            }
+
+            sender ! SequenceOf(relativeList)
+
+        case Employed => sender ! SearchResult(employed)
+
+        case WorksAt(corporate) => if(employed && worksAt.get.name == corporate.name) SearchResult(true) else SearchResult(false)
     }
 
     private def employmentRequest: Receive = {

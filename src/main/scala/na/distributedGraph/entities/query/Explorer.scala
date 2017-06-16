@@ -1,10 +1,11 @@
 package na.distributedGraph.entities.query
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
-import na.distributedGraph.models.{ListAll, Query, SearchResult}
-import na.distributedGraph.models.queries.Explore
+import na.distributedGraph.models.ListAll
+import na.distributedGraph.models.persons.FindFriendsWithRelatives
+import na.distributedGraph.models.queries._
 
-class Explorer(market: ActorRef) extends Actor with ActorLogging {
+class Explorer(market: ActorRef, population: ActorRef) extends Actor with ActorLogging {
 
     var queryInExecution: Option[Query] = None
 
@@ -18,8 +19,18 @@ class Explorer(market: ActorRef) extends Actor with ActorLogging {
     private def idle: Receive = {
         case Explore(currentQuery) =>
             queryInExecution = Some(currentQuery)
+
+            currentQuery match {
+                case HasFriendsWithRelatives(employed) => population
+
+                case relativesOf: RelativesOf => population forward relativesOf
+
+                case friendsWithRelatives: FindFriendsWithRelatives => population forward friendsWithRelatives
+            }
+
             market ! ListAll
             context become executing
+
     }
 
     private def executing: Receive = {
