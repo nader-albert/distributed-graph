@@ -121,7 +121,7 @@ object GraphBuilder extends App {
 
     private def generateQueries(): Seq[Command] = {
 
-        new PersonQueryBuilder {
+        /*new PersonQueryBuilder {
             override def build {
                 find(every(Person) that worksAt(Corporate("Corporate-2")))
             }
@@ -132,5 +132,26 @@ object GraphBuilder extends App {
                 find(one(Person("Person-3")) that worksAt(Corporate("Corporate-2")))
             }
         }
+    }*/
+
+        new PersonQueryBuilder {
+            find(every(Person)) who worksAt (Corporate("Corporate-3"))
+        } build
+
+        new PersonQueryBuilder {
+            find(one(Person("Person-3"))) who worksAt(Corporate("Corporate-2"))
+        } build
+
+        new PersonQueryBuilder {
+            find(relativesOf(every(Person)))
+        } build
+
+        new PersonQueryBuilder {
+            find(relativesOf(every(Person))) who worksAt (Corporate("Corporate-3"))
+        } build
+
+        new PersonQueryBuilder {
+            find(every(Person)) who hasFriends(withRelatives(employed))
+        } build
     }
 }
