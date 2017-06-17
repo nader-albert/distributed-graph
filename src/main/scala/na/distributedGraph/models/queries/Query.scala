@@ -26,12 +26,13 @@ case class SearchResult(number: Int)
 
 case object Employed extends PopulationQuery
 case object FindFriends extends PopulationQuery
-case object FindRelatives extends PopulationQuery
+case class FindRelativesAndReply(replyTo: ActorRef) extends PopulationQuery
 case class DoesWorkAt(corporate: Corporate) extends Query
 
 case class FindFriends(employed: Boolean) extends PopulationQuery
 case class FindRelativesOf(person: Person) extends PopulationQuery
 case class FindRelatives(employed: Boolean) extends PopulationQuery
+case class FindPersonsWhoWorkAt(corporate: Corporate) extends PopulationQuery
 case class FindRelativesOfWhoWorksAt(corporate: Corporate) extends PopulationQuery
 case class FindFriendsHavingRelatives(employed: Boolean) extends PopulationQuery
 case class FindPersonsWithFriendsHavingRelatives(employed: Boolean) extends PopulationQuery

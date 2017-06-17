@@ -1,10 +1,10 @@
 package na.distributedGraph.entities.query
 
-import akka.actor.{Actor, ActorLogging, ActorRef, Props}
+import akka.actor.{Actor, ActorLogging, ActorRef, Props, Stash}
 import na.distributedGraph.models.explorers.Explore
 import na.distributedGraph.models.queries._
 
-class Explorer(market: ActorRef, population: ActorRef) extends Actor with ActorLogging {
+class Explorer(market: ActorRef, population: ActorRef) extends Actor with ActorLogging with Stash{
 
     var queryInExecution: Option[Query] = None
 
@@ -15,8 +15,8 @@ class Explorer(market: ActorRef, population: ActorRef) extends Actor with ActorL
     private def idle: Receive = {
         case Explore(currentQuery) =>
             currentQuery match {
-                case marketQuery: MarketQuery => market forward marketQuery
-                case personQuery: PopulationQuery => population forward personQuery
+                case marketQuery: MarketQuery => market ! marketQuery
+                case personQuery: PopulationQuery => population ! personQuery
                 case _ =>
             }
 
@@ -32,14 +32,37 @@ class Explorer(market: ActorRef, population: ActorRef) extends Actor with ActorL
             }
 
             queryInExecution = None
+            unstashAll()
             context become idle
+
+        case MapOf(actors) =>
+            queryInExecution match {
+                case Some(query) => print(actors, query)
+                case None => log.error("false state, a results message has been received without a corresponding query") //TODO throw exception and escalate to supervisor
+            }
+            queryInExecution = None
+            unstashAll()
+            context become idle
+
+        case Explore => stash()
     }
 
-    private def print(records: Iterable[ActorRef], query: Query): Unit = {
+    private def print(records: Seq[ActorRef], query: Query): Unit = {
+        log.info(("\n\r results for query: (%s) \n\r " +
+            "[ ************************ ").format(query))
+        log.info("Total number of records found: (%s)".format(records.size))
+
+        records.foreach { record => println("\t\t(-- %s --)".format(record.path.name)) }
+
+        log.info("************************ ]")
+    }
+
+    private def print(records: Map[ActorRef, Seq[ActorRef]], query: Query): Unit = {
         log.info("\n\r results for query: (%s) \n\r [ ************************ ".format(query))
 
         records.foreach { record =>
-            println("\t\t(%s)".format(record.path.name))
+            println("\t\t(%s) :=> (%s)"
+                .format(record._1.path.name, record._2.map(_.path.name).fold("")((acc, actorName) => acc + "/" + actorName)))
         }
         println(" ************************ ]")
 
@@ -48,5 +71,5 @@ class Explorer(market: ActorRef, population: ActorRef) extends Actor with ActorL
 
 object Explorer {
 
-    def props(market: ActorRef) = Props(classOf[Explorer], market)
+    def props(market: ActorRef, population: ActorRef) = Props(classOf[Explorer], market, population)
 }

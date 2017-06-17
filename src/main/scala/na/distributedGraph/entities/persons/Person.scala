@@ -10,6 +10,7 @@ import na.distributedGraph.models.queries._
 import scala.concurrent.Await
 import scala.concurrent.duration._
 import scala.language.postfixOps
+import scala.concurrent.ExecutionContext.Implicits.global
 
 class Person(id: Integer) extends Actor with ActorLogging {
 
@@ -31,7 +32,7 @@ class Person(id: Integer) extends Actor with ActorLogging {
 
     private def query: Receive = {
 
-        case FindRelatives => sender ! SequenceOf(relatives)
+        case FindRelativesAndReply(replyTo) => replyTo ! SequenceOf(relatives)
 
         case FindFriends => sender ! SequenceOf(friends)
 
@@ -49,7 +50,7 @@ class Person(id: Integer) extends Actor with ActorLogging {
             var relativeList = Seq.empty[ActorRef]
 
             relatives.foreach { relative =>
-                Await.result (relative ? Employed, waitTime) match {
+                relative ? Employed onSuccess {
                     case ConditionResult(employmentStatus) if employmentStatus == isEmployed => relativeList = relativeList.+:(relative)
                 }
             }
@@ -58,7 +59,7 @@ class Person(id: Integer) extends Actor with ActorLogging {
 
         case Employed => sender ! ConditionResult(employed)
 
-        case DoesWorkAt(corporate) => if(employed && worksAt.get.name == corporate.name) ConditionResult(true) else ConditionResult(false)
+        case DoesWorkAt(corporate) => sender ! (if(employed && worksAt.get.name == corporate.name) ConditionResult(true) else ConditionResult(false))
     }
 
     private def employmentRequest: Receive = {
@@ -133,7 +134,7 @@ class Person(id: Integer) extends Actor with ActorLogging {
 
 object Person {
 
-    val waitTime: FiniteDuration = 25 seconds //Adding in sets which maintains uniquness requires quite a bit of extra time
+    val waitTime: FiniteDuration = 50 seconds //Adding in sets which maintains uniqueness requires quite a bit of extra time
     def props(id: Integer) = Props(classOf[Person], id)
 }
 

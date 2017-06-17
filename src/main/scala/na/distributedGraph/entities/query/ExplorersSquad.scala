@@ -39,7 +39,7 @@ class ExplorersSquad(queryConfig: Config) extends Squad[Explorer] with Actor wit
     }
 
     override def build(explorerIndex: Int): Unit = {
-        val newExplorer = context.actorOf(Explorer.props(market), name = "Explorer-" + explorerIndex)
+        val newExplorer = context.actorOf(Explorer.props(market, population), name = "Explorer-" + explorerIndex)
 
         explorers = newExplorer :: explorers
     }

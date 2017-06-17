@@ -1,23 +1,26 @@
 package na.distributedGraph.app
 
-import akka.actor.{ActorRef, ActorSystem}
 import com.typesafe.config.ConfigFactory
+
+import akka.pattern.ask
+import akka.util.Timeout
+import akka.actor.{ActorRef, ActorSystem}
+
+import na.distributedGraph.models.ListAll
+import na.distributedGraph.models.explorers.Run
+import na.distributedGraph.models.corporates.Hire
 import na.distributedGraph.entities.businesses.Market
 import na.distributedGraph.entities.persons.Population
 import na.distributedGraph.entities.query.ExplorersSquad
-import akka.pattern.ask
-import akka.util.Timeout
-import na.distributedGraph.models.ListAll
-import na.distributedGraph.models.corporates.Hire
+import na.distributedGraph.models.queries.{Query, SequenceOf}
 import na.distributedGraph.models.dsl.{Corporate, Person, PersonDslParser}
 import na.distributedGraph.models.persons.{RequestFriendshipWith, RequestRelationshipWith}
-import na.distributedGraph.models.queries.{Query, SequenceOf}
 
-import scala.concurrent.duration._
+import scala.util.Random
 import scala.concurrent.Await
+import scala.concurrent.duration._
 import scala.concurrent.duration.FiniteDuration
 import scala.language.postfixOps
-import scala.util.Random
 
 object GraphBuilder extends App {
 
@@ -25,7 +28,9 @@ object GraphBuilder extends App {
 
     val waitTime: FiniteDuration = 5 seconds
 
-    val sleepTime: FiniteDuration = 30 seconds
+    val shortsSleepTime: FiniteDuration = 50 seconds
+
+    val sleepTime: FiniteDuration = 100 seconds
 
     val config = ConfigFactory load
 
@@ -59,13 +64,11 @@ object GraphBuilder extends App {
 
     connectRelatives(people)
 
-    Thread.sleep(sleepTime.toMillis)
+    Thread.sleep(shortsSleepTime.toMillis)
 
     println("Executing queries")
 
-    val queries = generateQueries
-
-    //explorers ! Run(queries)
+    explorers ! Run(generateQueries)
 
     Thread.sleep(sleepTime.toMillis)
 
@@ -120,45 +123,24 @@ object GraphBuilder extends App {
         Random.shuffle(actors.filterNot(exclusionList.contains)).head
     }
 
-    private def generateQueries(): Seq[Query] = {
-
-        /*new PersonQueryBuilder {
-            override def build {
-                find(every(Person) that worksAt(Corporate("Corporate-2")))
-            }
-        }
-
-        new PersonQueryBuilder {
-            override def build {
-                find(one(Person("Person-3")) that worksAt(Corporate("Corporate-2")))
-            }
-        }
-    }*/
-
+    private def generateQueries: Seq[Query] = {
         Seq.empty.+:(
-
-        new PersonDslParser {
-            find(every(Person)) who worksAt (Corporate("Corporate-3"))
-        } build
+            new PersonDslParser {
+                find(relativesOf(one(Person("Person-3"))))
+            } build
+        )/*.+:(
+            new PersonDslParser {
+                find(every(Person)) who worksAt (Corporate("Corporate-3"))
+            } build
+        )*//*.+:(
+            new PersonDslParser {
+                find(relativesOf(every(Person))) who worksAt (Corporate("Corporate-3"))
+            } build
         ).+:(
-
-        new PersonDslParser {
-            find(one(Person("Person-3"))) who worksAt(Corporate("Corporate-2"))
-        } build
-        ).+:(
-        new PersonDslParser {
-            find(relativesOf(one(Person(""))))
-        } build
-        ).+:(
-
-        new PersonDslParser {
-            find(relativesOf(every(Person))) who worksAt (Corporate("Corporate-3"))
-        } build
-        ).+:(
-        new PersonDslParser {
-            find(every(Person)) who hasFriends(withRelatives(employed))
-        } build
-        )
+            new PersonDslParser {
+                find(every(Person)) who hasFriends(withRelatives(employed))
+            } build
+        )*/
     }
 }
 

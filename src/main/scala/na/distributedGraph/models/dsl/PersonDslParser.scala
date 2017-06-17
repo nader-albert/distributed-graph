@@ -102,7 +102,7 @@ trait PersonDslParser { //extends QueryBuilder {
                     }
                     case _ => None //should be a correct default value.. made temporarily to avoid match being inexhaustive
                 }
-                case _ => println("ERROR: unexpected state"); None
+                case _ => println("DSLParser: unexpected condition"); None
             }
     }
 
@@ -163,8 +163,9 @@ trait PersonDslParser { //extends QueryBuilder {
             case (RelativesOfOne(person), None) => Some(FindRelativesOf(person))
             // TODO: Search For a Business
             case (RelativesOfAny, Some(EmployedBy(corporate))) => Some(FindRelativesOfWhoWorksAt(corporate))
+            case (EveryPerson, Some(EmployedBy(corporate))) => Some(FindPersonsWhoWorkAt(corporate))
             case (EveryPerson, Some(HasFriendsWithRelatives(employment))) => Some(FindPersonsWithFriendsHavingRelatives(employment.status))
-            case _ => println("ERROR: inconsistent state ") ; None
+            case _ => println("DSLParser: unexpected combination of selection and condition ") ; None
         }
     }
 }

@@ -5,9 +5,9 @@ import akka.actor.{Actor, ActorLogging, ActorRef, Kill, Props}
 import akka.util.Timeout
 import com.typesafe.config.Config
 import na.distributedGraph.entities.Squad
-import na.distributedGraph.models.{Join, Leave}
+import na.distributedGraph.models.{Join, Leave, ListAll}
 import na.distributedGraph.models.corporates._
-import na.distributedGraph.models.queries.{FindCorporatesWithEmployeesMoreThan, FindNumberOfEmployees, SearchResult}
+import na.distributedGraph.models.queries.{FindCorporatesWithEmployeesMoreThan, FindNumberOfEmployees, SearchResult, SequenceOf}
 
 import scala.concurrent.duration._
 import scala.language.postfixOps
@@ -40,6 +40,8 @@ class Market(marketConfig: Config) extends Squad[Employer] with Actor with Actor
             sender ! Kill
             log.info("business (%s) has left the market ".format(sender.path.name))
             businesses = businesses.filterNot(_ == sender)
+
+        case ListAll => sender ! SequenceOf(businesses)
 
         case FindCorporatesWithEmployeesMoreThan(minimumNumber) =>
             var matchingBusinesses = Seq.empty[ActorRef]
