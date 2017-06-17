@@ -4,6 +4,7 @@ import akka.util.Timeout
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import na.distributedGraph.models._
 import na.distributedGraph.models.corporates._
+import na.distributedGraph.models.queries.{FindNumberOfEmployees, SearchResult}
 
 import scala.concurrent.duration._
 import scala.language.postfixOps
@@ -50,6 +51,8 @@ class Employer(id: Integer) extends Actor with ActorLogging {
 
         case Rejected(submittedOffer, reason) =>
             log.info("candidate (%s) has rejected the offer(%s) due to (%s)".format(sender.path.name, submittedOffer, reason))
+
+        case FindNumberOfEmployees => sender ! SearchResult(employees.size)
     }
 
     private def preparePackage: Package = Package(nextString(20), nextInt(20))

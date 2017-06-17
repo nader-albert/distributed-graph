@@ -5,7 +5,7 @@ import akka.util.Timeout
 import na.distributedGraph.models.Offer
 import na.distributedGraph.models.corporates.{Accepted, Fired, Rejected}
 import na.distributedGraph.models.persons._
-import na.distributedGraph.models.queries.{SearchResult, SequenceOf}
+import na.distributedGraph.models.queries._
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
@@ -13,7 +13,7 @@ import scala.language.postfixOps
 
 class Person(id: Integer) extends Actor with ActorLogging {
 
-    //TODO: Replace with Sets for uniquness ... times out check why
+    //TODO: Replace with Sets for uniqueness ... times out check why
     var relatives: IndexedSeq[ActorRef] = IndexedSeq.empty[ActorRef]
     var friends: IndexedSeq[ActorRef] = IndexedSeq.empty[ActorRef]
 
@@ -22,6 +22,8 @@ class Person(id: Integer) extends Actor with ActorLogging {
     var worksAt: Option[ActorPath] = None
 
     import Person._
+
+    implicit val timeout = Timeout(waitTime)
 
     override def receive: Receive = {
         query orElse employmentRequest orElse requestRelationship orElse requestFriendship orElse receiveRelationship orElse receiveFriendship
@@ -33,9 +35,7 @@ class Person(id: Integer) extends Actor with ActorLogging {
 
         case FindFriends => sender ! SequenceOf(friends)
 
-        case FindFriendsWithRelatives(isEmployed) =>
-            implicit val timeout = Timeout(waitTime)
-
+        case FindFriendsHavingRelatives(isEmployed) =>
             var matchingFriends = Seq.empty[ActorRef]
 
             friends.foreach { friend =>
@@ -50,15 +50,15 @@ class Person(id: Integer) extends Actor with ActorLogging {
 
             relatives.foreach { relative =>
                 Await.result (relative ? Employed, waitTime) match {
-                    case SearchResult(employmentStatus) if employmentStatus == isEmployed => relativeList = relativeList.+:(relative)
+                    case ConditionResult(employmentStatus) if employmentStatus == isEmployed => relativeList = relativeList.+:(relative)
                 }
             }
 
             sender ! SequenceOf(relativeList)
 
-        case Employed => sender ! SearchResult(employed)
+        case Employed => sender ! ConditionResult(employed)
 
-        case WorksAt(corporate) => if(employed && worksAt.get.name == corporate.name) SearchResult(true) else SearchResult(false)
+        case DoesWorkAt(corporate) => if(employed && worksAt.get.name == corporate.name) ConditionResult(true) else ConditionResult(false)
     }
 
     private def employmentRequest: Receive = {

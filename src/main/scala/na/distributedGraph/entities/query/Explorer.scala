@@ -1,8 +1,7 @@
 package na.distributedGraph.entities.query
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
-import na.distributedGraph.models.ListAll
-import na.distributedGraph.models.persons.FindFriendsWithRelatives
+import na.distributedGraph.models.explorers.Explore
 import na.distributedGraph.models.queries._
 
 class Explorer(market: ActorRef, population: ActorRef) extends Actor with ActorLogging {
@@ -13,30 +12,22 @@ class Explorer(market: ActorRef, population: ActorRef) extends Actor with ActorL
         idle orElse executing
     }
 
-    /***
-      * TODO: should translate the query into messages
-      */
     private def idle: Receive = {
         case Explore(currentQuery) =>
-            queryInExecution = Some(currentQuery)
-
             currentQuery match {
-                case HasFriendsWithRelatives(employed) => population
-
-                case relativesOf: RelativesOf => population forward relativesOf
-
-                case friendsWithRelatives: FindFriendsWithRelatives => population forward friendsWithRelatives
+                case marketQuery: MarketQuery => market forward marketQuery
+                case personQuery: PopulationQuery => population forward personQuery
+                case _ =>
             }
 
-            market ! ListAll
+            queryInExecution = Some(currentQuery)
             context become executing
-
     }
 
     private def executing: Receive = {
-        case SearchResult(corporates) =>
+        case SequenceOf(elements) =>
             queryInExecution match {
-                case Some(query) => print(corporates, query)
+                case Some(query) => print(elements, query)
                 case None => log.error("false state, a results message has been received without a corresponding query") //TODO throw exception and escalate to supervisor
             }
 

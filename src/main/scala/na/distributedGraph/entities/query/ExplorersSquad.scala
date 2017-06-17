@@ -4,7 +4,7 @@ import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import com.typesafe.config.Config
 import na.distributedGraph.entities.Squad
 import na.distributedGraph.entities.query.ExplorersSquad.waitTime
-import na.distributedGraph.models.queries.{Add, Explore, Remove, Run}
+import na.distributedGraph.models.explorers.{Add, Explore, Remove, Run}
 
 import scala.concurrent.Await
 import scala.concurrent.duration._

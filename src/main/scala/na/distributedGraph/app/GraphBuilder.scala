@@ -5,12 +5,13 @@ import com.typesafe.config.ConfigFactory
 import na.distributedGraph.entities.businesses.Market
 import na.distributedGraph.entities.persons.Population
 import na.distributedGraph.entities.query.ExplorersSquad
-import na.distributedGraph.models.{QueryBuilder, _}
-import na.distributedGraph.models.queries.{Command => _, _}
 import akka.pattern.ask
 import akka.util.Timeout
+import na.distributedGraph.models.ListAll
 import na.distributedGraph.models.corporates.Hire
+import na.distributedGraph.models.dsl.{Corporate, Person, PersonDslParser}
 import na.distributedGraph.models.persons.{RequestFriendshipWith, RequestRelationshipWith}
+import na.distributedGraph.models.queries.{Query, SequenceOf}
 
 import scala.concurrent.duration._
 import scala.concurrent.Await
@@ -119,7 +120,7 @@ object GraphBuilder extends App {
         Random.shuffle(actors.filterNot(exclusionList.contains)).head
     }
 
-    private def generateQueries(): Seq[Command] = {
+    private def generateQueries(): Seq[Query] = {
 
         /*new PersonQueryBuilder {
             override def build {
@@ -134,24 +135,35 @@ object GraphBuilder extends App {
         }
     }*/
 
-        new PersonQueryBuilder {
+        Seq.empty.+:(
+
+        new PersonDslParser {
             find(every(Person)) who worksAt (Corporate("Corporate-3"))
         } build
+        ).+:(
 
-        new PersonQueryBuilder {
+        new PersonDslParser {
             find(one(Person("Person-3"))) who worksAt(Corporate("Corporate-2"))
         } build
-
-        /*new PersonQueryBuilder {
-            find(relativesOf(every(Person(""))))
+        ).+:(
+        new PersonDslParser {
+            find(relativesOf(one(Person(""))))
         } build
-*/
-        new PersonQueryBuilder {
+        ).+:(
+
+        new PersonDslParser {
             find(relativesOf(every(Person))) who worksAt (Corporate("Corporate-3"))
         } build
-
-        new PersonQueryBuilder {
+        ).+:(
+        new PersonDslParser {
             find(every(Person)) who hasFriends(withRelatives(employed))
         } build
+        )
     }
 }
+
+
+// All relatives of person X
+// Relatives of every person who works at business y  ==> RelativesOfAny + WorksAt condition
+// all businesses with more than Z
+// Every person who has friends with employed relatives ==> RelativesOfFriends + Employed Condition
