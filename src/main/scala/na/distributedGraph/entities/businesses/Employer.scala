@@ -33,14 +33,6 @@ class Employer(id: Integer) extends Actor with ActorLogging {
 
             person ! offer
 
-            //TODO: hiring process should be made asynchronous
-            /*Await.result (person ? offer , waitTime) match {
-                case Accepted => employees.::(sender)
-
-                case Rejected(submitedOffer, reason) =>
-                    log.info("candidate (%s) has rejected the offer(%s) due to (%s)".format(submitedOffer, offer, reason))
-            }*/
-
         case Fire(person) => person ! Fired
             employees = employees.filterNot(_ == person)
 
