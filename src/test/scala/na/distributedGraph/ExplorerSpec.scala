@@ -44,16 +44,5 @@ class ExplorerSpec() extends TestKit(ActorSystem("ExplorerSpec"))
             market.expectMsg(FindNumberOfEmployees)
         }
     }
-
-    "An Explorer " must {
-        "return the number of persons in a population" in {
-            val population = TestProbe()
-            val market = TestProbe()
-
-            val explorer = system.actorOf(Explorer.props(market.ref, population.ref))
-
-            //explorer ! Explore(ListAll)
-            //expectMsg(ListAll)
-        }
-    }
+    // TODO: cover the rest of scenarios
 }
