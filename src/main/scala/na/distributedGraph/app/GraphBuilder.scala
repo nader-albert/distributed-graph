@@ -1,11 +1,9 @@
 package na.distributedGraph.app
 
 import com.typesafe.config.ConfigFactory
-
 import akka.pattern.ask
 import akka.util.Timeout
 import akka.actor.{ActorRef, ActorSystem}
-
 import na.distributedGraph.models.ListAll
 import na.distributedGraph.models.explorers.Run
 import na.distributedGraph.models.corporates.Hire
@@ -13,7 +11,7 @@ import na.distributedGraph.entities.businesses.Market
 import na.distributedGraph.entities.persons.Population
 import na.distributedGraph.entities.query.ExplorersSquad
 import na.distributedGraph.models.queries.{Query, SequenceOf}
-import na.distributedGraph.models.dsl.{Corporate, Parser}
+import na.distributedGraph.models.dsl.{Corporate, Parser, Person}
 import na.distributedGraph.models.persons.{RequestFriendshipWith, RequestRelationshipWith}
 
 import scala.util.Random
@@ -30,7 +28,7 @@ object GraphBuilder extends App {
 
     val shortsSleepTime: FiniteDuration = 20 seconds
 
-    val sleepTime: FiniteDuration = 80 seconds
+    val sleepTime: FiniteDuration = 60 seconds
 
     val config = ConfigFactory load
 
@@ -64,16 +62,11 @@ object GraphBuilder extends App {
 
     connectRelatives(people)
 
-    //Thread.sleep(shortsSleepTime.toMillis)
-
     println("********************* Running Queries ************************")
-
-    // TEST
-    //people.find(_.path.name== "Person-3").get ! RequestFriendshipWith(people.find(_.path.name== "Person-3").get)
 
     explorers ! Run(generateQueries)
 
-    //Thread.sleep(sleepTime.toMillis)
+    Thread.sleep(sleepTime.toMillis)
 
     println("End program")
 
@@ -127,33 +120,26 @@ object GraphBuilder extends App {
     }
 
     private def generateQueries: Seq[Query] = {
-        Seq.empty/*.+:(
+        Seq.empty.+:(
             new Parser {
                 find(relativesOf(one(Person("Person-38"))))
             } build
-        )*/.+:(
+        ).+:(
             new Parser {
                 find(every(Corporate)) `with` numberOfEmployeesMoreThan(2)
             } build
-        )
-        /*.+:(
-            new PersonDslParser {
+        ).+:(
+            new Parser {
                 find(every(Person)) who worksAt (Corporate("Corporate-3"))
             } build
         ).+:(
-            new PersonDslParser {
+            new Parser {
                 find(relativesOf(every(Person))) who worksAt (Corporate("Corporate-8"))
             } build
         ).+:(
-            new PersonDslParser {
+            new Parser {
                 find(every(Person)) who hasFriends(withRelatives(employed))
             } build
-        )*/
+        )
     }
 }
-
-
-// All relatives of person X
-// Relatives of every person who works at business y  ==> RelativesOfAny + WorksAt condition
-// all businesses with more than Z
-// Every person who has friends with employed relatives ==> RelativesOfFriends + Employed Condition
