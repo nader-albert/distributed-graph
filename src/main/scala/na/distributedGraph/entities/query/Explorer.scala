@@ -53,10 +53,6 @@ class Explorer(market: ActorRef, population: ActorRef) extends Actor with ActorL
             "\t\t %s \n\r ****************************************************]")
             .format(query, records.size, records.map(_.path.name)
                 .fold("")((acc, record) => acc + "\n\r Record: (-- %s--)".format(record))))
-
-        //records.foreach { record => println("\t\t Record[%s]: (-- %s --)".format(query, record.path.name)) }
-
-        //log.info("************************ ]")
     }
 
     private def print(records: Map[ActorRef, Seq[ActorRef]], query: Query): Unit = {
