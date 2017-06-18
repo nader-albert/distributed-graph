@@ -169,15 +169,3 @@ trait PersonDslParser { //extends QueryBuilder {
         }
     }
 }
-
-/*
-* sealed trait Condition
-case class Employment(status: Boolean) extends Condition
-case class EmployedBy(corporate: Corporate) extends Condition
-case class HasFriendsWithRelatives(employment: Employment) extends Condition
-
-sealed trait TargetSelection
-case object EveryPerson extends TargetSelection
-case class OnePerson(person: Person) extends TargetSelection
-case class RelativesOfOne(person: Person) extends TargetSelection
-case object RelativesOfAny extends TargetSelection*/

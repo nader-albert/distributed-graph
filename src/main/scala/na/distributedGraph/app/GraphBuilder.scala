@@ -28,7 +28,7 @@ object GraphBuilder extends App {
 
     val waitTime: FiniteDuration = 5 seconds
 
-    val shortsSleepTime: FiniteDuration = 50 seconds
+    val shortsSleepTime: FiniteDuration = 20 seconds
 
     val sleepTime: FiniteDuration = 100 seconds
 
@@ -56,7 +56,7 @@ object GraphBuilder extends App {
     val people = bringSquadOf(population)
     val corporates = bringSquadOf(market)
 
-    println("number of people is (%s) and number of corporates is (%s)".format(people.size, corporates.size))
+    println("number of people is (%s) and number of corporates is (%s)".format(people.size-1, corporates.size-1))
 
     hire(people, corporates)
 
@@ -66,7 +66,10 @@ object GraphBuilder extends App {
 
     Thread.sleep(shortsSleepTime.toMillis)
 
-    println("Executing queries")
+    println("********************* Running Queries ************************")
+
+    // TEST
+    //people.find(_.path.name== "Person-3").get ! RequestFriendshipWith(people.find(_.path.name== "Person-3").get)
 
     explorers ! Run(generateQueries)
 
@@ -126,15 +129,15 @@ object GraphBuilder extends App {
     private def generateQueries: Seq[Query] = {
         Seq.empty.+:(
             new PersonDslParser {
-                find(relativesOf(one(Person("Person-3"))))
+                find(relativesOf(one(Person("Person-38"))))
             } build
         )/*.+:(
             new PersonDslParser {
                 find(every(Person)) who worksAt (Corporate("Corporate-3"))
             } build
-        )*//*.+:(
+        ).+:(
             new PersonDslParser {
-                find(relativesOf(every(Person))) who worksAt (Corporate("Corporate-3"))
+                find(relativesOf(every(Person))) who worksAt (Corporate("Corporate-8"))
             } build
         ).+:(
             new PersonDslParser {

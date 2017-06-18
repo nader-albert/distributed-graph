@@ -48,24 +48,15 @@ class Population(populationConfig: Config) extends Squad[Person] with Actor with
                 matchedPerson => matchedPerson ! FindRelativesAndReply(sender)
         }
 
-        case FindRelativesOfWhoWorksAt(corporate) =>
-            sender ! MapOf(findRelativesWhoWorksAt(corporate))
+        case FindRelativesOfWhoWorksAt(corporate) => val realSender = sender
+            realSender ! MapOf(findRelativesWhoWorksAt(corporate))
 
-        case FindPersonsWithFriendsHavingRelatives(isEmployed) =>
-            sender ! SequenceOf(findPersonsWithFriendsHavingRelatives(isEmployed))
+        case FindPersonsWithFriendsHavingRelatives(isEmployed) => val realSender = sender
+            realSender ! SequenceOf(findPersonsWithFriendsHavingRelatives(isEmployed))
 
-        case FindPersonsWhoWorkAt(corporate) => sender ! findPersonsWhoWorksAt(corporate)
+        case FindPersonsWhoWorkAt(corporate) => val realSender = sender
+            realSender ! findPersonsWhoWorksAt(corporate)
     }
-
-    /*private def findRelativesOf(person: na.distributedGraph.models.dsl.Person) = {
-        persons.find(_.path.name == person.name).foreach {
-            matchedPerson =>
-                matchedPerson ! FindRelatives /*onSuccess {
-                    case relatives: SequenceOf => relatives
-                }*/
-        }
-        Seq.empty
-    }*/
 
     private def findPersonsWhoWorksAt(corporate: Corporate) = {
         var matchingPersons = Seq.empty[ActorRef]
@@ -89,8 +80,8 @@ class Population(populationConfig: Config) extends Squad[Person] with Actor with
                 Await.result(person ? DoesWorkAt(corporate), waitTime) match {
                     case ConditionResult(worksAt) => if (worksAt)
                         Await.result(person ? FindRelatives, waitTime) match {
-                            case SequenceOf(relatives) => if (relatives.nonEmpty)
-                                relativesMap = relativesMap.updated(person, relatives)
+                            case SequenceOf(relatives) =>
+                                if (relatives.nonEmpty) relativesMap = relativesMap.updated(person, relatives) else relativesMap
                         }
                 }
         }
@@ -101,11 +92,11 @@ class Population(populationConfig: Config) extends Squad[Person] with Actor with
     private def findPersonsWithFriendsHavingRelatives(isEmployed: Boolean) = {
         var matchingPersons = Seq.empty[ActorRef]
 
-        persons.foreach { //TODO: This is very inefficient, especially with large numbers of persons.. Instead this should be made asynchronous and results should be collected when they are available using a correlation ID
-            person =>
+        persons.foreach { //TODO: This is inefficient, especially with large numbers of persons.. Instead this should be made asynchronous and results should be collected when they are available using a correlation ID
+            person => //TODO should be a future
                 Await.result(person ? FindFriendsHavingRelatives(isEmployed), waitTime) match {
                     case SequenceOf(matchingFriends) if matchingFriends.nonEmpty => matchingPersons = matchingPersons.+:(person)
-                    case _: SequenceOf =>
+                    case _: SequenceOf => matchingPersons = matchingPersons
                 }
         }
 
