@@ -24,7 +24,6 @@ class Employer(id: Integer) extends Actor with ActorLogging {
 
     private def inAction: Receive = {
         case Hire(person) =>
-
             val offer = Offer(preparePackage)
 
             log.info("(%s) hiring (%s) with offer salary (%s)".format(self.path.name, person.path.name, offer.`package`.salary))
@@ -44,7 +43,7 @@ class Employer(id: Integer) extends Actor with ActorLogging {
         case Rejected(submittedOffer, reason) =>
             log.info("candidate (%s) has rejected the offer(%s) due to (%s)".format(sender.path.name, submittedOffer, reason))
 
-        case FindNumberOfEmployees => sender ! SearchResult(employees.size-1)
+        case FindNumberOfEmployees => sender ! SearchResult(employees.size)
     }
 
     private def preparePackage: Package = Package(nextString(20), nextInt(20))
