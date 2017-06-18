@@ -92,7 +92,7 @@ class Population(populationConfig: Config) extends Squad[Person] with Actor with
         var matchingPersons = Seq.empty[ActorRef]
 
         persons.foreach { //TODO: This is inefficient, especially with large numbers of persons.. Instead this should be made asynchronous and results should be collected when they are available using a correlation ID
-            person => //TODO should be a future
+            person => // TODO: can be made a callback on Future at the very least
                 Await.result(person ? FindFriendsHavingRelatives(isEmployed), waitTime) match {
                     case SequenceOf(matchingFriends) if matchingFriends.nonEmpty => matchingPersons = matchingPersons.+:(person)
                     case _: SequenceOf => matchingPersons = matchingPersons

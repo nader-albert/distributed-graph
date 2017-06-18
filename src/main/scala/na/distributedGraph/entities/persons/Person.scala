@@ -14,6 +14,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import java.util.concurrent.ConcurrentHashMap
 import scala.collection.JavaConverters._
 import java.lang.{Boolean => JBoolean}
+import scala.language.implicitConversions
 
 class Person(id: Integer) extends Actor with ActorLogging {
 
