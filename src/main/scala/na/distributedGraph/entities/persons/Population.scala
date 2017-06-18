@@ -15,7 +15,6 @@ import scala.concurrent.Await
 import scala.concurrent.duration._
 import scala.concurrent.duration.FiniteDuration
 import scala.language.postfixOps
-import scala.concurrent.ExecutionContext.Implicits.global
 
 class Population(populationConfig: Config) extends Squad[Person] with Actor with ActorLogging {
 
