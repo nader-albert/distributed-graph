@@ -3,9 +3,7 @@ package na.distributedGraph.models.queries
 import akka.actor.ActorRef
 import na.distributedGraph.models.dsl.{Corporate, Person}
 
-sealed trait Query {
-
-}
+sealed trait Query
 
 trait PopulationQuery extends Query
 

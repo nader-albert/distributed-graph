@@ -4,48 +4,43 @@ import na.distributedGraph.models.queries._
 
 sealed trait Entity
 
-//case object Person extends Entity
-//case object Corporate extends Entity
-
 case class Person(name: String) extends Entity
 case class Corporate(name: String) extends Entity
 
 sealed trait Condition
 case class Employment(status: Boolean) extends Condition
+case class EmployeesExceed(number: Int) extends Condition
 case class EmployedBy(corporate: Corporate) extends Condition
 case class HasFriendsWithRelatives(employment: Employment) extends Condition
 
 sealed trait TargetSelection
 case object EveryPerson extends TargetSelection
+case object EveryBusiness extends TargetSelection
 case class OnePerson(person: Person) extends TargetSelection
 case class RelativesOfOne(person: Person) extends TargetSelection
 case object RelativesOfAny extends TargetSelection
 
-trait PersonDslParser { //extends QueryBuilder {
-    // var friendOf: Seq[Person] = Seq.empty
-    // var relativeOf: Seq[Person] = Seq.empty
-    // var worksAt: Option[Corporate] = None
-    // var isEmployed: Boolean = worksAt.isDefined
-    // var withFriendsEmployed = false
-    // var withRelativesEmployed = false
-
+trait Parser {
     var targetSelection: TargetSelection = _
     var conditionOfSelection: Option[Condition] = None
 
-    //var select: Entity = _
-    //var conditions: List[ConditionWord] = List.empty
-
     def every(person: Person.type) = Every(person)
+
+    def every(business: Corporate.type) = EveryCorporate(business)
 
     def one(person: Person) = One(person)
 
     def who(condition: ConditionWord) = new Who(condition)
+
+    def `with`(condition: ConditionWord) = new With(condition)
 
     def worksAt(employer: Corporate) = WorksAt(employer)
 
     def hasFriends(condition: ConditionWord) = HasFriends(condition)
 
     def withRelatives(condition: ConditionWord) = WithRelatives(condition)
+
+    def numberOfEmployeesMoreThan(number: Int) = NumberOfEmployeesMoreThan(number)
 
     def employed = Employed
 
@@ -54,6 +49,7 @@ trait PersonDslParser { //extends QueryBuilder {
     protected def find(matcher: => MatchWord): this.type = {
         targetSelection = matcher match {
             case _:Every => EveryPerson
+            case _:EveryCorporate => EveryBusiness
             case One(person) => OnePerson(person)
             case RelativesOf(selection) => selection match {
                 case _: Every => RelativesOfAny
@@ -64,30 +60,14 @@ trait PersonDslParser { //extends QueryBuilder {
         this
     }
 
-    sealed trait MatchWord {
-        //var one = false
-        //var many = false
-        //var selection: Entity
-    }
+    sealed trait LinkWord
+    sealed trait MatchWord
+    sealed trait ConditionWord
 
-    sealed trait LinkWord {}
-    sealed trait ConditionWord {}
-
-    case class Every(selection: Person.type) extends MatchWord {
-        //select = `match`
-        //target = EveryPerson
-    }
-
-    case class One(selection: Person) extends MatchWord {
-        //target = OnePerson(selection)
-    }
-
-    case class RelativesOf(selection: MatchWord) extends MatchWord {
-        //selection match {
-        //    case _: Every => target = RelativesOfAny
-        //    case one: One => target = RelativesOfOne(one.selection)
-        //}
-    }
+    case class One(selection: Person) extends MatchWord
+    case class Every(selection: Person.type) extends MatchWord
+    case class EveryCorporate(selection: Corporate.type) extends MatchWord
+    case class RelativesOf(selection: MatchWord) extends MatchWord
 
     class Who(condition: ConditionWord) extends LinkWord {
         conditionOfSelection =
@@ -106,62 +86,30 @@ trait PersonDslParser { //extends QueryBuilder {
             }
     }
 
-    case class WorksAt(employer: Corporate) extends ConditionWord {
-        //worksAt = Some(employer)
-        //conditions = conditions.::(this)
-        //condition = EmployedBy(employer)
+    class With(condition: ConditionWord) extends LinkWord {
+        conditionOfSelection =
+            condition match {
+                case employees: NumberOfEmployeesMoreThan => Some(EmployeesExceed(employees.number))
+                case _ => None
+            }
     }
 
-    case object Employed extends ConditionWord {
-        //isEmployed = true
-        //conditions = conditions.::(this)
-        //condition = Employment(true)
-    }
+    case class NumberOfEmployeesMoreThan(number: Int) extends ConditionWord
 
-    case class HasFriends(condition: ConditionWord) extends ConditionWord {
-        //conditions = conditions.::(this)
-    }
+    case class WorksAt(employer: Corporate) extends ConditionWord
 
-    case class WithRelatives(condition: ConditionWord) extends ConditionWord {
-        //conditions = conditions.::(this)
-    }
+    case object Employed extends ConditionWord
 
-    /*protected def one(entity: Entity): this.type = {
-        this.entity = entity
-        one = true
-        this
-    }*/
+    case class HasFriends(condition: ConditionWord) extends ConditionWord
 
-    /*def withRelatives(persons: => Seq[Person]): this.type = {
-        this.relativeOf = persons
-        this
-    }
-
-    def hasFriends(persons: => Boolean): this.type = {
-        //this.friendOf = persons
-        this
-    }*/
-
-    /*def worksAt(employer: Corporate): this.type = {
-        this.worksAt = Some(employer)
-        this
-    }*/
-
-    /*def who(queryBuilder: PersonQueryBuilder): this.type = {
-        queryBuilder
-    }*/
-
-    /*def employed: this.type = {
-        this.isEmployed = true
-        this
-    }*/
+    case class WithRelatives(condition: ConditionWord) extends ConditionWord
 
     def build: Query = this.transform.orNull
 
     private def transform: Option[Query] = {
         (targetSelection, conditionOfSelection) match {
             case (RelativesOfOne(person), None) => Some(FindRelativesOf(person))
-            // TODO: Search For a Business
+            case (EveryBusiness, Some(EmployeesExceed(number))) => Some(FindCorporatesWithEmployeesMoreThan(number))
             case (RelativesOfAny, Some(EmployedBy(corporate))) => Some(FindRelativesOfWhoWorksAt(corporate))
             case (EveryPerson, Some(EmployedBy(corporate))) => Some(FindPersonsWhoWorkAt(corporate))
             case (EveryPerson, Some(HasFriendsWithRelatives(employment))) => Some(FindPersonsWithFriendsHavingRelatives(employment.status))

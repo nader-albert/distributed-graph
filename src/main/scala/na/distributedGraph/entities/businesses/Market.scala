@@ -46,12 +46,15 @@ class Market(marketConfig: Config) extends Squad[Employer] with Actor with Actor
         case FindCorporatesWithEmployeesMoreThan(minimumNumber) =>
             var matchingBusinesses = Seq.empty[ActorRef]
 
+            val realSender = sender
+
             businesses.foreach { corporate =>
                 Await.result(corporate ? FindNumberOfEmployees, Market.waitTime) match {
                     case SearchResult(numberOfEmployees) => if (numberOfEmployees > minimumNumber)
                         matchingBusinesses = matchingBusinesses.:+(corporate)
                 }
             }
+            realSender ! SequenceOf(matchingBusinesses)
      }
 
     override def build(corporatesIndex: Int): Unit = {

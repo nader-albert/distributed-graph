@@ -47,12 +47,12 @@ class Employer(id: Integer) extends Actor with ActorLogging {
         case Accepted(submittedOffer) =>
             log.info("candidate (%s) has accepted the offer(%s)".format(sender.path.name, submittedOffer))
 
-            employees.::(sender)
+            employees = employees.::(sender)
 
         case Rejected(submittedOffer, reason) =>
             log.info("candidate (%s) has rejected the offer(%s) due to (%s)".format(sender.path.name, submittedOffer, reason))
 
-        case FindNumberOfEmployees => sender ! SearchResult(employees.size)
+        case FindNumberOfEmployees => sender ! SearchResult(employees.size-1)
     }
 
     private def preparePackage: Package = Package(nextString(20), nextInt(20))

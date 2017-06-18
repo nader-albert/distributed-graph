@@ -52,7 +52,7 @@ class Explorer(market: ActorRef, population: ActorRef) extends Actor with ActorL
             "[ ************************ ").format(query))
         log.info("Total number of records found: (%s)".format(records.size))
 
-        records.foreach { record => println("\t\t(-- %s --)".format(record.path.name)) }
+        records.foreach { record => println("\t\t Record[%s]: (-- %s --)".format(query, record.path.name)) }
 
         log.info("************************ ]")
     }

@@ -13,7 +13,7 @@ import na.distributedGraph.entities.businesses.Market
 import na.distributedGraph.entities.persons.Population
 import na.distributedGraph.entities.query.ExplorersSquad
 import na.distributedGraph.models.queries.{Query, SequenceOf}
-import na.distributedGraph.models.dsl.{Corporate, Person, PersonDslParser}
+import na.distributedGraph.models.dsl.{Corporate, Parser}
 import na.distributedGraph.models.persons.{RequestFriendshipWith, RequestRelationshipWith}
 
 import scala.util.Random
@@ -30,7 +30,7 @@ object GraphBuilder extends App {
 
     val shortsSleepTime: FiniteDuration = 20 seconds
 
-    val sleepTime: FiniteDuration = 100 seconds
+    val sleepTime: FiniteDuration = 80 seconds
 
     val config = ConfigFactory load
 
@@ -64,7 +64,7 @@ object GraphBuilder extends App {
 
     connectRelatives(people)
 
-    Thread.sleep(shortsSleepTime.toMillis)
+    //Thread.sleep(shortsSleepTime.toMillis)
 
     println("********************* Running Queries ************************")
 
@@ -73,7 +73,7 @@ object GraphBuilder extends App {
 
     explorers ! Run(generateQueries)
 
-    Thread.sleep(sleepTime.toMillis)
+    //Thread.sleep(sleepTime.toMillis)
 
     println("End program")
 
@@ -91,7 +91,7 @@ object GraphBuilder extends App {
     }
 
     private def connectFriends(people: Seq[ActorRef]) = {
-        few(people)(5).foreach {
+        few(people)(15).foreach {
             person =>
                 var exclude = Seq.empty.+:(person)
 
@@ -127,11 +127,16 @@ object GraphBuilder extends App {
     }
 
     private def generateQueries: Seq[Query] = {
-        Seq.empty.+:(
-            new PersonDslParser {
+        Seq.empty/*.+:(
+            new Parser {
                 find(relativesOf(one(Person("Person-38"))))
             } build
-        )/*.+:(
+        )*/.+:(
+            new Parser {
+                find(every(Corporate)) `with` numberOfEmployeesMoreThan(2)
+            } build
+        )
+        /*.+:(
             new PersonDslParser {
                 find(every(Person)) who worksAt (Corporate("Corporate-3"))
             } build
