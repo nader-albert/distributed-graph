@@ -45,7 +45,7 @@ class Population(populationConfig: Config) extends Squad[Person] with Actor with
 
         case FindRelativesOf(person) =>
             persons.find(_.path.name == person.name).foreach {
-                matchedPerson => matchedPerson ! FindRelativesAndReply(sender)
+                matchedPerson => matchedPerson ! FindRelativesAndReplyTo(sender)
         }
 
         case FindRelativesOfWhoWorksAt(corporate) => val realSender = sender
@@ -55,7 +55,7 @@ class Population(populationConfig: Config) extends Squad[Person] with Actor with
             realSender ! SequenceOf(findPersonsWithFriendsHavingRelatives(isEmployed))
 
         case FindPersonsWhoWorkAt(corporate) => val realSender = sender
-            realSender ! findPersonsWhoWorksAt(corporate)
+            realSender ! SequenceOf(findPersonsWhoWorksAt(corporate))
     }
 
     private def findPersonsWhoWorksAt(corporate: Corporate) = {
@@ -112,7 +112,7 @@ class Population(populationConfig: Config) extends Squad[Person] with Actor with
 
 object Population {
 
-    val waitTime: FiniteDuration = 25 seconds
+    val waitTime: FiniteDuration = 10 seconds
 
     def props(populationConfig: Config) = Props(classOf[Population], populationConfig)
 }

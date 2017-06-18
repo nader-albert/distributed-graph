@@ -48,24 +48,25 @@ class Explorer(market: ActorRef, population: ActorRef) extends Actor with ActorL
     }
 
     private def print(records: Seq[ActorRef], query: Query): Unit = {
-        log.info(("\n\r results for query: (%s) \n\r " +
-            "[ ************************ ").format(query))
-        log.info("Total number of records found: (%s)".format(records.size))
+        log.info(("\n\r results for query: (%s) (%s records) \n\r " +
+            "[ *************************************************************** \n\r " +
+            "\t\t %s \n\r ****************************************************]")
+            .format(query, records.size, records.map(_.path.name)
+                .fold("")((acc, record) => acc + "\n\r Record: (-- %s--)".format(record))))
 
-        records.foreach { record => println("\t\t Record[%s]: (-- %s --)".format(query, record.path.name)) }
+        //records.foreach { record => println("\t\t Record[%s]: (-- %s --)".format(query, record.path.name)) }
 
-        log.info("************************ ]")
+        //log.info("************************ ]")
     }
 
     private def print(records: Map[ActorRef, Seq[ActorRef]], query: Query): Unit = {
-        log.info("\n\r results for query: (%s) \n\r [ ************************ ".format(query))
+        log.info(("\n\r results for query: (%s) (%s) records) \n\r " +
+            "[ ************************ ").format(query, records.size))
 
-        records.foreach { record =>
-            println("\t\t(%s) :=> (%s)"
-                .format(record._1.path.name, record._2.map(_.path.name).fold("")((acc, actorName) => acc + "/" + actorName)))
+        records.foreach { record => println("\t\t Record: (%s) :=> (%s)"
+            .format(record._1.path.name, record._2.map(_.path.name).fold("")((acc, actorName) => acc + "/" + actorName)))
         }
         println(" ************************ ]")
-
     }
 }
 

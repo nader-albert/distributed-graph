@@ -34,7 +34,9 @@ class Person(id: Integer) extends Actor with ActorLogging {
 
     private def query: Receive = {
 
-        case FindRelativesAndReply(replyTo) => replyTo ! SequenceOf(relatives)
+        case FindRelativesAndReplyTo(replyTo) => replyTo ! SequenceOf(relatives)
+
+        case FindRelatives => sender ! SequenceOf(relatives)
 
         case FindFriends => sender ! SequenceOf(friends)
 
@@ -71,7 +73,7 @@ class Person(id: Integer) extends Actor with ActorLogging {
 
     private def employmentRequest: Receive = {
         case offer: Offer =>
-            if(offer.`package`.salary < 8) {
+            if(offer.`package`.salary < 5) {
                 log.info("rejected an offer from (%s) with package (%s)".format(sender.path.name, offer.`package`.salary))
 
                 sender ! Rejected(offer, "salary package (%s) less than expectation".format(offer.`package`.salary))
@@ -136,7 +138,7 @@ class Person(id: Integer) extends Actor with ActorLogging {
 }
 
 object Person {
-    val waitTime: FiniteDuration = 20 seconds
+    val waitTime: FiniteDuration = 10 seconds
     def props(id: Integer) = Props(classOf[Person], id)
 }
 
