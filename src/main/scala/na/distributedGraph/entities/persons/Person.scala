@@ -11,12 +11,14 @@ import scala.concurrent.Await
 import scala.concurrent.duration._
 import scala.language.postfixOps
 import scala.concurrent.ExecutionContext.Implicits.global
+import java.util.concurrent.ConcurrentHashMap
+import scala.collection.JavaConverters._
+import java.lang.{Boolean => JBoolean}
 
 class Person(id: Integer) extends Actor with ActorLogging {
 
-    //TODO: Replace with Sets for uniqueness ... times out check why
-    var relatives: IndexedSeq[ActorRef] = IndexedSeq.empty[ActorRef]
-    var friends: IndexedSeq[ActorRef] = IndexedSeq.empty[ActorRef]
+    var relatives: ConcurrentHashMap.KeySetView[ActorRef, JBoolean] = ConcurrentHashMap.newKeySet[ActorRef]()
+    var friends: ConcurrentHashMap.KeySetView[ActorRef, JBoolean] = ConcurrentHashMap.newKeySet[ActorRef]()
 
     var employed = false
 
@@ -41,7 +43,7 @@ class Person(id: Integer) extends Actor with ActorLogging {
 
             val realSender = sender
 
-            friends.foreach { friend =>
+            friends foreach { friend =>
                 Await.result (friend ? FindRelatives(isEmployed), waitTime) match {
                     case SequenceOf(friendRelatives) => if (friendRelatives.nonEmpty) matchingFriends = matchingFriends.+:(friend)
                 }
@@ -53,7 +55,7 @@ class Person(id: Integer) extends Actor with ActorLogging {
             var relativeList = Seq.empty[ActorRef]
             val realSender = sender
 
-            relatives.foreach { relative =>
+            relatives foreach { relative =>
                 relative ? Employed onSuccess {
                     case ConditionResult(employmentStatus) if employmentStatus == isEmployed => relativeList = relativeList.+:(relative)
                     case _ =>
@@ -88,60 +90,53 @@ class Person(id: Integer) extends Actor with ActorLogging {
         case RequestRelationshipWith(otherPerson) =>
             log.info("(%s) requesting family relation with (%s)".format(self.path.name, otherPerson.path.name))
 
-            implicit val timeout = Timeout(waitTime)
-            Await.result (otherPerson ? ReceiveRelationshipRequestFrom(self), waitTime) match {
+            otherPerson ? ReceiveRelationshipRequestFrom(self) onSuccess {
                 case FamilyRelationAccepted =>
                     log.info("(%s) became relative with (%s)".format(self.path.name, otherPerson.path.name))
-                    relatives = relatives.+:(otherPerson)
-                    //relatives + otherPerson
+                    relatives.add(otherPerson)
                 case _ =>
             }
 
         case UnRelateWith(otherPerson) =>
             otherPerson ! UnRelateWith(self) //TODO: shall we wait for an acknowledgment ?
-            relatives = relatives.filterNot(_ == otherPerson)
+            relatives.remove(otherPerson)
     }
 
     private def requestFriendship: Receive = {
         case RequestFriendshipWith(otherPerson) =>
             log.info("(%s) requesting friendship with (%s)".format(self.path.name, otherPerson.path.name))
 
-            implicit val timeout = Timeout(waitTime)
-
-            Await.result (otherPerson ? ReceiveFriendshipRequestFrom(self), waitTime) match {
+            otherPerson ? ReceiveFriendshipRequestFrom(self) onSuccess {
                 case FriendRequestAccepted =>
                     log.info("(%s) became friend with (%s)".format(self.path.name, otherPerson.path.name))
 
-                    friends = friends.+:(otherPerson)
-                    //friends + otherPerson
+                    friends.add(otherPerson)
             }
 
         case UnFriend(otherPerson) =>
             otherPerson ! UnFriend(self) //TODO: shall we wait for an acknowledgment to make sure the other person is detached?
-            friends = friends.filterNot(_ == otherPerson)
+            friends.remove(otherPerson)
     }
 
     private def receiveRelationship: Receive = {
         case ReceiveRelationshipRequestFrom(otherPerson) =>
-            sender ! FriendRequestAccepted
+            relatives.add(otherPerson)
 
-            log.info("(%s) became relative with (%s)".format(self.path.name, otherPerson.path.name))
-            relatives = relatives.+:(otherPerson)
-            //relatives = relatives + otherPerson
+            sender ! FamilyRelationAccepted
     }
 
     private def receiveFriendship: Receive = {
         case ReceiveFriendshipRequestFrom(otherPerson) =>
-            sender ! FriendRequestAccepted
+            friends.add(otherPerson)
 
-            log.info("(%s) became friend with (%s)".format(self.path.name, otherPerson.path.name))
-            friends = friends.+:(otherPerson)
+            sender ! FriendRequestAccepted
     }
+
+    implicit def toSeq(set: ConcurrentHashMap.KeySetView[ActorRef, JBoolean]): Seq[ActorRef] = set.asScala.toSeq
 }
 
 object Person {
-
-    val waitTime: FiniteDuration = 120 seconds //Adding in sets which maintains uniqueness requires quite a bit of extra time
+    val waitTime: FiniteDuration = 20 seconds
     def props(id: Integer) = Props(classOf[Person], id)
 }
 
