@@ -7,7 +7,7 @@ import com.typesafe.config.Config
 import na.distributedGraph.entities.Squad
 import na.distributedGraph.models.{Join, Leave, ListAll}
 import na.distributedGraph.models.corporates._
-import na.distributedGraph.models.queries.{FindCorporatesWithEmployeesMoreThan, FindNumberOfEmployees, SearchResult, SequenceOf}
+import na.distributedGraph.models.queries._
 
 import scala.concurrent.duration._
 import scala.language.postfixOps
@@ -34,7 +34,7 @@ class Market(marketConfig: Config) extends Squad[Employer] with Actor with Actor
         case Joined =>
             log.info("business (%s) has joined the market ".format(sender.path.name))
 
-            businesses.::(sender)
+            businesses = businesses.::(sender)
 
         case Left =>
             sender ! Kill
@@ -61,8 +61,6 @@ class Market(marketConfig: Config) extends Squad[Employer] with Actor with Actor
         val newBusiness = context.actorOf(Employer.props(corporatesIndex), name = "Corporate-" + corporatesIndex)
 
         newBusiness ! Join
-
-        businesses = newBusiness :: businesses
     }
 }
 
