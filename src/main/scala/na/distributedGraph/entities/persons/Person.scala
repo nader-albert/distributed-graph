@@ -73,7 +73,7 @@ class Person(id: Integer) extends Actor with ActorLogging {
 
     private def employmentRequest: Receive = {
         case offer: Offer =>
-            if(offer.`package`.salary < 5) {
+            if(offer.`package`.salary < 2) {
                 log.info("rejected an offer from (%s) with package (%s)".format(sender.path.name, offer.`package`.salary))
 
                 sender ! Rejected(offer, "salary package (%s) less than expectation".format(offer.`package`.salary))
